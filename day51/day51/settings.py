@@ -121,6 +121,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# 配置静态文件的目录
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 

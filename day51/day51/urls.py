@@ -18,6 +18,7 @@ from django.urls import path
 from app01 import views
 
 urlpatterns = [
+    # 这里配置访问路径然后跳转到app中views中的函数处理
     path('admin/', admin.site.urls),
     path('login/', views.login),
     path('auth/', views.auth),
