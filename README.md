@@ -1,10 +1,6 @@
 # LearnDjango
 学习django框架使用的库
 
-
-
-
-
 ## cs与bs架构
 
 1. 客户端   服务端
@@ -126,7 +122,7 @@ templates文件夹下
 ​		
 ## Django
 
-![image-20250411140753625](images\image-20250411140753625.png)
+![image-20250411140753625](images/image-20250411140753625.png)
 
 ​	注意事项
 ​		1.你的计算机的名称不能有中文
@@ -344,6 +340,7 @@ request.GET
     	request.GET.get('username')
     	
     	# 如果想直接把列表全部取出(***重要***)
+        # 推荐使用这种方式，如果同一个字段有多个值的情况就可以全部取到，然后再进行处理
     	request.GET.getlist('hobby')
 ```
 
@@ -429,7 +426,7 @@ python3 manage.py migrate
 
 实际上只生成了一个app01_user的表，加上一个app01的前缀可以区分每个不同app中有相同名称的表重复，其它的表都是django生成的表。
 
-![image-20250411144434048](images\image-20250411144434048.png)
+![image-20250411144434048](images/image-20250411144434048.png)
 
 ### 表字段的增删改查
 
@@ -453,7 +450,10 @@ python3 manage.py migrate
 
 orm操作需要使用models中的类的名字
 
-数据的查
+### 数据操作
+
+查数据有两种方法`get`和`filter`数据库中没有get的数据的时候，代码会报错，所以推荐使用filter的方式。
+
 ```python
 from app01 import models
 
@@ -471,7 +471,7 @@ user_obj = res.first()
 ```python
 1.
 models.User.objects.create(username=username,password=password)
-2.
+# 2.save方法会更新全部字段的内容，即使是只修改了一个字段。
 user_obj = models.User(username=username,password=password)
 user_obj.save()
 ```
@@ -483,16 +483,35 @@ models.User.objects.filter(条件).delete()
 
 改
 ```python
-models.User.objects.filter(条件).update()
+# 推荐使用update方法
+models.User.objects.filter(条件).update('key'='value')
+
+        filter拿到是一个列表,filter操作其实都是批量操作
+        如果filter结果列表中有多个数据那么会一次性全部修改 
+        类似于for循环一个个修改.
+        
+# 方式二(不推荐使用)
+edit_obj.username = username
+edit_obj.password = password
+edit_obj.save()
+"""
+第二种方式会从头到尾将所有的字段全部修改一遍  效率极低
+"""
 ```
 
 用户的增删改查
 1.通过orm展示所有的到前端
 	all()
 	模板语法for循环
+
+
+
 2.添加新增按钮 (用户的新增操作)
 	a标签的href直接触发后端逻辑
 	create()
+
+
+
 3.添加编辑 删除按钮
 	编辑
 	删除
@@ -501,6 +520,8 @@ models.User.objects.filter(条件).update()
 
 如果是编辑 
 	重新渲染一个页面 将编辑对象传递到前端
+
+
 
 如果是删除
 	直接利用filter(...).delete()
