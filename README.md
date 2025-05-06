@@ -402,14 +402,14 @@ class User(models.Model):
 	username = models.CharField(max_length=32)  # username varchar(32)   CharField必须要指定max_length参数
 	password = models.IntegerField()  # password int
 ```
-| 字段                                      | mysql中的类型 |
-| ----------------------------------------- | ------------- |
-| CharField(max_length=32)                  | varchar(32)   |
-| IntegerField                              | int           |
-| IntegerField(null=True)                   | 允许为空      |
-| CharField(max_length=32, default='China') | 默认值china   |
-|                                           |               |
-|                                           |               |
+| 字段                                        | mysql中的类型                     |
+| ------------------------------------------- | --------------------------------- |
+| CharField(max_length=32)                    | varchar(32)                       |
+| IntegerField                                | int                               |
+| IntegerField(null=True)                     | 允许为空                          |
+| CharField(max_length=32, default='China')   | 默认值china                       |
+| DecimalField(max_digits=8,decimal_places=2) | 浮点型，总共8位，保留小数点后两位 |
+|                                             |                                   |
 
 **需要执行数据库迁移(同步)命令**,只要修改了模型就必须这样修改。
 
@@ -521,10 +521,129 @@ edit_obj.save()
 如果是编辑 
 	重新渲染一个页面 将编辑对象传递到前端
 
-
-
 如果是删除
 	直接利用filter(...).delete()
 
-作业
-	用户的增删改查用页面的形式给我写出来
+
+
+图书管理系统表关系设计
+
+![image-20250421153839544](images\image-20250421153839544.png)
+
+多对多：书和出版社联合出版，一个出版社出版多本书。
+
+一对多：一个作者出版多本书。
+
+一对一：用户和用户详情，用户的唯一id对应用的详情表。
+
+### 表与表之间建立联系
+
+django orm中表与表之间建关系。
+
+多对多会建立第三张表去做中间的映射。to后面的是表的名字。默认情况下会与表的主键id相关联。
+
+|        |                                  |
+| ------ | -------------------------------- |
+| 一对多 | ForeignKey(to='Publish')         |
+| 一对一 | OneToOneField(to='AuthorDetail') |
+| 多对多 | ManyToManyField(to='Author')     |
+|        |                                  |
+
+使用方式：
+
+```python
+
+```
+
+注意:
+前面两个关键字会自动再字段后面加_id
+最后一个关键字 并不会产生实际字段 只是告诉django orm自动创建第三张表。
+
+## 路由层urls.py
+
+url()方法第一个参数其实是一个正则表达式一旦前面的正则匹配到了内容就不会再往下继续匹配而是直接执行对应的视图函数正是由于上面的特性当你的项目特别庞大的时候url的前后顺序也是你需要你考虑极有可能会出现url错乱的情况。
+
+django在路由的匹配的时候，当你在浏览器中没有敲最后的斜杠django会先拿着你没有敲斜杠的结果取匹配如果都没有匹配上，会让浏览器在末尾加斜杠再发一次请求再匹配一次，如果还匹配不上才会报错。
+
+如果你想取消该机制不想做二次匹配可以在settings配置文件中指定:
+```bash
+APPEND_SLASH = False  # 该参数默认是True
+```
+
+### 无名分组
+
+```python
+urls     url(r'^test/([0-9]{4})/', views.test)
+路由匹配的时候会将括号内正则表达式匹配到的内容当做位置参数传递给视图函数
+views    test(request,2019)
+```
+
+### 有名分组
+
+```python
+urls		url(r'^test/(?P<year>\d+)/', views.test)
+路由匹配的时候会将括号内正则表达式匹配到的内容当做关键字参数传递给视图函数
+views		test(request,year=2019)
+```
+
+注意：无名有名不能混合使用 !!!
+
+同一种分组可以重复使用。
+
+```python
+# 无名分组支持多个
+# url(r'^test/(\d+)/(\d+)/', views.test),
+# 有名分组支持多个
+# url(r'^test/(?P<year>\d+)/(?P<xx>\d+)/', views.test),
+```
+
+### 反向解析
+
+本质:其实就是给你返回一个能够返回对应url的地址
+		
+1.先给url和视图函数对应关系起别名
+
+```python
+url(r'^index/$',views.index,name='kkk')
+```
+
+2.反向解析
+后端反向解析,后端可以在任意位置通过reverse反向解析出对应的url
+```python
+from django.shortcuts import render,HttpResponse,redirect,reverse
+
+def xxx(request):
+    print(reverse('kkk'))
+    
+# 前端反向解析
+	{% url 'kkk' %}
+```
+
+### 无名分组反向解析
+
+```python
+url(r'^index/(\d+)/$',views.index,name='kkk')
+
+# 后端反向解析
+	reverse('kkk',args=(1,))  # 后面的数字通常都是数据的id值
+# 前端反向解析
+	{% url 'kkk' 1%}   # 后面的数字通常都是数据的id值
+```
+
+### 有名分组反向解析
+
+同无名分组反向解析意义的用法		
+
+```python
+url(r'^index/(?P<year>\d+)/$',views.index,name='kkk')
+		
+后端方向解析
+print(reverse('kkk',args=(1,)))  # 推荐你使用上面这种减少你的脑容量消耗
+print(reverse('kkk',kwargs={'year':1}))
+
+前端反向解析	
+
+<a href="{% url 'kkk' 1 %}">1</a>  # 推荐你使用上面这种减少你的脑容量消耗
+<a href="{% url 'kkk' year=1 %}">1</a>
+```
+注意:在同一个应用下 别名千万不能重复!!!
