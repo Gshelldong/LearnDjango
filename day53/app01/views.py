@@ -3,10 +3,12 @@ from django.shortcuts import render,HttpResponse,redirect,reverse
 # Create your views here.
 def test(request,year):
     print("获取到了uri中的year: ",year)
+    print(reverse('app01_test',args=(year,)))
     return HttpResponse(b'hello word!')
 
 def test_named(request, year=None):
     print(year)
+    print('rev: ', reverse('app01_test_named', kwargs={'year': 2029}))
     return HttpResponse('uri number is {}'.format(year))
 
 def nameds(request, year=None,month=None,day=None):
@@ -15,5 +17,17 @@ def nameds(request, year=None,month=None,day=None):
     return HttpResponse(content.encode('utf-8'))
 
 def xxx(request,year):
-    print(reverse('xxx', args=(1212,)))
+    print(reverse('xxx', args=(year,)))
     return HttpResponse(b'hhhhhhhh')
+
+def index(request,*args):
+    print(reverse('app01_index',args=args))
+    return render(request, 'index.html')
+
+def login(request):
+    print(reverse('app01_index'))
+    return HttpResponse(b'hello login!')
+
+def testadd(request):
+    print(reverse('app01_test_named', kwargs={'year':1}))
+    return HttpResponse(b'testadd')

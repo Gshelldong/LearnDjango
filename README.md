@@ -580,6 +580,12 @@ urlpatterns = [
 ]
 ```
 
+默认路由
+
+```python
+r'^$'
+```
+
 
 
 ### 无名分组
@@ -623,14 +629,21 @@ url(r'^index/$',views.index,name='kkk')
 
 2.反向解析
 后端反向解析,后端可以在任意位置通过reverse反向解析出对应的url
+
+### 无分组信息的反向解析
+
 ```python
 from django.shortcuts import render,HttpResponse,redirect,reverse
 
 def xxx(request):
     print(reverse('kkk'))
     
-# 前端反向解析
+# 前端反向解析，从url中的kkk别名中来的
 	{% url 'kkk' %}
+
+path('index111/', app01_views.index, name='app01_index'),
+# 这里会把href中的链接直接解析为index111/所以无论后端如何修改，前端的url也会跟着修改
+<a href="{% url 'app01_index' %}">index9</a>
 ```
 
 ### 无名分组反向解析
@@ -642,6 +655,36 @@ url(r'^index/(\d+)/$',views.index,name='kkk')
 	reverse('kkk',args=(1,))  # 后面的数字通常都是数据的id值
 # 前端反向解析
 	{% url 'kkk' 1%}   # 后面的数字通常都是数据的id值
+
+# 无名分组的使用和写法
+# urls
+re_path('^index/(\d+)/', app01_views.index, name='app01_index'),
+
+# views
+def index(request,*args):
+    # 注意这里渲染的始终是一个容器如列表，元祖等
+    print(reverse('app01_index',args=args))
+    return render(request, 'index.html')
+
+# index.html
+<body>
+<a href="{% url 'app01_index' 1%}123/">index2</a>
+<a href="{% url 'app01_index' 123%}456/">index3</a>
+</body>
+```
+
+实际使用场景编辑用户对id的渲染
+
+```python
+"""
+url(r'^edit_user/(\d+)/',views.edit_user,name='aaa'),
+
+{% for edit_obj in edit_list%}
+<a href="edit_user/{{edit_obj.id}}/">编辑</a>
+{%endfor%}
+
+def edit_user(request,edit_id):
+    reverse('aaa',args=(edit_id,))
 ```
 
 ### 有名分组反向解析
@@ -651,7 +694,7 @@ url(r'^index/(\d+)/$',views.index,name='kkk')
 ```python
 url(r'^index/(?P<year>\d+)/$',views.index,name='kkk')
 		
-后端方向解析
+# 后端方向解析
 print(reverse('kkk',args=(1,)))  # 推荐你使用上面这种减少你的脑容量消耗
 print(reverse('kkk',kwargs={'year':1}))
 
@@ -659,5 +702,29 @@ print(reverse('kkk',kwargs={'year':1}))
 
 <a href="{% url 'kkk' 1 %}">1</a>  # 推荐你使用上面这种减少你的脑容量消耗
 <a href="{% url 'kkk' year=1 %}">1</a>
+```
+
+```python
+# 换种写法urls.py
+re_path(r'^test/(?P<year>\d+)/$', app01_views.test_named, name='app01_test_named'),
+
+# views.py
+def test_named(request, year=None):
+    print(year)
+    return HttpResponse('uri number is {}'.format(year))
+
+# 匹配的结果
+/test/2025/
+```
+
+```python
+# 这里在定义了之后同样会打印定义的值
+# views.py
+def test_named(request, year=None):
+    print(year)
+    print('rev: ', reverse('app01_test_named', kwargs={'year': 2029}))
+    return HttpResponse('uri number is {}'.format(year))
+
+rev:  /test/2029/
 ```
 注意:在同一个应用下别名千万不能重复!!!
