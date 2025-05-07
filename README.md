@@ -570,11 +570,25 @@ django在路由的匹配的时候，当你在浏览器中没有敲最后的斜�
 APPEND_SLASH = False  # 该参数默认是True
 ```
 
+django3.2版本中使用的是
+
+```bash
+from django.urls import re_path
+
+urlpatterns = [
+    re_path(r'^articles/(?P<year>\d+)/$', views.year_archive),
+]
+```
+
+
+
 ### 无名分组
+
+必须是一个分组才行。
 
 ```python
 urls     url(r'^test/([0-9]{4})/', views.test)
-路由匹配的时候会将括号内正则表达式匹配到的内容当做位置参数传递给视图函数
+# 路由匹配的时候会将括号内正则表达式匹配到的内容当做位置参数传递给视图函数。
 views    test(request,2019)
 ```
 
@@ -582,7 +596,7 @@ views    test(request,2019)
 
 ```python
 urls		url(r'^test/(?P<year>\d+)/', views.test)
-路由匹配的时候会将括号内正则表达式匹配到的内容当做关键字参数传递给视图函数
+# 路由匹配的时候会将括号内正则表达式匹配到的内容当做关键字参数传递给视图函数
 views		test(request,year=2019)
 ```
 
@@ -641,9 +655,9 @@ url(r'^index/(?P<year>\d+)/$',views.index,name='kkk')
 print(reverse('kkk',args=(1,)))  # 推荐你使用上面这种减少你的脑容量消耗
 print(reverse('kkk',kwargs={'year':1}))
 
-前端反向解析	
+前端反向解析
 
 <a href="{% url 'kkk' 1 %}">1</a>  # 推荐你使用上面这种减少你的脑容量消耗
 <a href="{% url 'kkk' year=1 %}">1</a>
 ```
-注意:在同一个应用下 别名千万不能重复!!!
+注意:在同一个应用下别名千万不能重复!!!
