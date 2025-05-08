@@ -1,4 +1,5 @@
 from django.shortcuts import render,HttpResponse,redirect,reverse
+from app01 import models
 
 # Create your views here.
 def test(request,year):
@@ -31,3 +32,8 @@ def login(request):
 def testadd(request):
     print(reverse('app01_test_named', kwargs={'year':1}))
     return HttpResponse(b'testadd')
+
+def list_book(request):
+    book_infos = models.Book.objects.all()
+    print(book_infos)
+    return render(request, 'book_info.html', {'data', book_infos})

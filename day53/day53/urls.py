@@ -28,5 +28,8 @@ urlpatterns = [
     re_path(r'^test/(?P<year>\d+)/$', app01_views.test_named, name='app01_test_named'),
 
     # 多个具名分组的使用
-    re_path(r'^date/(?P<year>\d+)/(?P<month>\d+)/(?P<day>\d+)/', app01_views.nameds, name='app01_nameds')
+    re_path(r'^date/(?P<year>\d+)/(?P<month>\d+)/(?P<day>\d+)/', app01_views.nameds, name='app01_nameds'),
+
+    # 书籍管理的路由
+    path('book_info/', app01_views.list_book, name='book_info'),
 ]

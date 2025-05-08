@@ -13,21 +13,22 @@
     <div class="row">
         <div class="col-md-8 col-md-offset-2">
             <h3 class="text-center">用户信息展示</h3>
+            <a href="/add_book/" type="button" class="btn btn-sucess">添加书籍</a>
             <table class="table table-striped table-bordered table-hover">
                 <thead>
                 <tr>
                     <th>id</th>
-                    <th>用户名</th>
-                    <th>密码</th>
-                    <th>操作</th>
+                    <th>书名</th>
+                    <th>价格</th>
+                    <th>出版社</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for user_obj in data %}
+                {% for book_info in data %}
                 <tr>
                     <td>{{ user_obj.id }}</td>
-                    <td>{{ user_obj.username }}</td>
-                    <td>{{ user_obj.password }}</td>
+                    <td>{{ user_obj.price }}</td>
+                    <td>{{ user_obj.publish }}</td>
                     <td class="text-center">
                         <a href="/edit_user/?id={{ user_obj.id }}" type="button" class="btn btn-primary">编辑</a>
                         <a href="/del_user/?id={{ user_obj.id }}" type="button" class="btn btn-danger">删除</a>
