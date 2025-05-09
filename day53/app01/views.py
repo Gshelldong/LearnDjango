@@ -35,5 +35,36 @@ def testadd(request):
 
 def list_book(request):
     book_infos = models.Book.objects.all()
-    print(book_infos)
-    return render(request, 'book_info.html', {'data', book_infos})
+    return render(request, 'book_info.html', {'data': book_infos})
+
+def add_book(request):
+    if request.method == "POST":
+        name = request.POST.get('bookname')
+        price = request.POST.get('price')
+        publish = request.POST.get('publish')
+        publish = models.Publish.objects.filter(name=publish).first()
+        book_obj = models.Book(title=name,price=price,publish=publish)
+        book_obj.save()
+
+        return redirect(reverse('book_info'))
+
+    publishs = models.Publish.objects.all()
+    return render(request, 'add_book.html', {'publishs': publishs})
+
+def del_book(request, id):
+    models.Book.objects.filter(id=id).delete()
+    return  redirect(reverse('book_info'))
+
+def edit_book(request, id):
+    if request.method == 'POST':
+        name = request.POST.get('bookname')
+        price = request.POST.get('price')
+        publish_id = request.POST.get('publish')
+        publish = models.Publish.objects.filter(id=publish_id).first()
+        models.Book.objects.filter(id=id).update(title=name,price=price,publish=publish)
+
+        return redirect(reverse('book_info'))
+
+    book = models.Book.objects.filter(id=id).first()
+    publishs = models.Publish.objects.all()
+    return render(request,'edit_book.html',{'book': book,'publishs': publishs})

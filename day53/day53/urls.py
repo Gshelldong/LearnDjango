@@ -31,5 +31,8 @@ urlpatterns = [
     re_path(r'^date/(?P<year>\d+)/(?P<month>\d+)/(?P<day>\d+)/', app01_views.nameds, name='app01_nameds'),
 
     # 书籍管理的路由
-    path('book_info/', app01_views.list_book, name='book_info'),
+    path('book_infoo/', app01_views.list_book, name='book_info'),
+    path('add_book/', app01_views.add_book, name='add_book'),
+    re_path(r'del_book/(?P<id>\d+)', app01_views.del_book, name='del_book'),
+    re_path(r'edit_book/(?P<id>\d+)', app01_views.edit_book, name='edit_book'),
 ]

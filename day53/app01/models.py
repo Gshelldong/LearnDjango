@@ -14,7 +14,7 @@ class Book(models.Model):
     publish = models.ForeignKey(to='Publish',on_delete=models.CASCADE)  # to表示的就是跟哪张表是一对多的关系默认都是跟表的主键字段建立关系
     """
     只要是ForeignKey的字段 django orm在创建表的时候 会自动在一对多的字段名之后加_id
-    如果你自己加了 不管 还会继续往后加
+    如果你自己加了不管还会继续往后加
     """
     # publish = models.ForeignKey(to=Publish)  # to后面也可以直接写表名 但是必须保证表名在上面
     # 书籍和作者是多对多的关系
