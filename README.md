@@ -738,11 +738,154 @@ rev:  /test/2029/
 当你的应用下的视图函数特别特别多的时候你可以建一个views文件夹里面根据功能的细分再建不同的py文件(******)
 
 ```python
+# 在urls.py中导别名，include中就可以直接写as的别名
+from app01 import views as app01_views
+from app02 import views as app02_views
+
 # 主urls.py
         urlpatterns = [
 			url(r'^admin/', admin.site.urls),
 			url(r'^app01/',include('app01.urls')),
 			url(r'^app02/',include('app02.urls')),
 		]
+    
+# app01 urls.py
+urlpatterns = [
+    path('index/', views.list_book, name='app01_list'),
+]
+
+# app02 urls.py
+urlpatterns = [
+    path('index/', views.app02_index, name='app02_index'),
+]
 ```
 
+### 名称空间
+
+给每个app的url.py中一个名称，然后名称空间中引用。
+
+多个app起了相同的别名 这个时候用反向解析 并不会自动识别应用前缀。
+如果想避免这种问题的发生。
+
+```bash
+方式1:
+	总路由，总路由中一级路由的后面千万不加$符号
+		url(r'^app01/',include('app01.urls',namespace='app01'))
+		url(r'^app02/',include('app02.urls',namespace='app02'))
+	后端解析的时候
+		reverse('app01:index')
+		reverse('app02:index')
+	前端解析的时候
+		{% url 'app01:index' %}
+		{% url 'app02:index' %}
+
+方式2: 不使用名称空间:
+	起别名的时候不要冲突即可一般情况下在起别名的时候通常建议以应用名作为前缀
+		name = 'app01_index'
+		name = 'app02_index'
+```
+
+django 3.2版本的配置
+
+```python
+# 主urls.py中配置
+    path(r'app02/',include('app02.urls', namespace='app02')),
+    path(r'app01/',include('app01.urls', namespace='app01')),
+    
+# app01 urls.py的配置
+    # 必须定义app_name，就是主路由中定义的namespace
+	app_name = 'app01'
+    urlpatterns = [
+        path('index/', views.list_book, name='app01_list'),
+    ]
+    
+# app02 urls.py的配置
+    app_name = 'app01'
+    urlpatterns = [
+        path('index/', views.list_book, name='app01_list'),
+    ]
+```
+
+## 伪静态
+
+静态网页:数据是写死的万年不变。
+
+伪静态网页的设计是为了增加百度等搜索引擎seo查询力度。
+
+所有的搜索引擎其实都是一个巨大的爬虫程序。
+
+网站优化相关 通过伪静态确实可以提高你的网站被查询出来的概率。
+
+## 虚拟环境
+
+一般情况下我们会给每一个项目配备该项目所需要的模块不需要的一概不装虚拟环境就类似于为个项目量身定做的解释器环境。
+每创建一个虚拟环境就类似于你又下载了一个全新的python解释器。
+
+## django版本路由的区别
+
+### django1.X跟django2.X版本区别
+路由层1.X用的是url,而2.X用的是path
+
+2.X中的path第一个参数不再是正则表达式,而是写什么就匹配什么 是精准匹配
+
+当你使用2.X不习惯的时候 ,2.X还有一个叫re_path
+2.x中的re_path就是你1.X的url
+
+
+虽然2.X中path不支持正则表达式  但是它提供了五种默认的转换器
+
+1.0版本的url和2.0版本的re_path分组出来的数据都是字符串类型。
+默认有五个转换器，感兴趣的自己可以课下去试一下
+
+- str,匹配除了路径分隔符（/）之外的非空字符串，这是默认的形式
+- int,匹配正整数，包含0。
+- slug,匹配字母、数字以及横杠、下划线组成的字符串。
+- uuid,匹配格式化的uuid，如 075194d3-6885-417e-a8a8-6c931e272f00。
+- path,匹配任何非空字符串，包含了路径分隔符（/）（不能用？）
+
+
+
+```python
+path('index/<int:id>/',index)  # 会将id匹配到的内容自动转换成整型
+```
+
+访问 /index/12346  id传到后端是一个kv的形式传递到后端的`id=123456`所以后端接收要么接收任意关键字参数要么接收，位置参数`id`
+
+```python
+# urls.py
+path(r'pipei/<int:num>/', app01_views.pipei, name='pipei'),
+
+# 处理的函数
+def pipei(request,**kwargs):
+    print(kwargs)
+    return HttpResponse(b'hello baby')
+
+# 方式二：
+def pipei(request,num):
+    print(num)
+    return HttpResponse(b'hello baby')
+```
+
+
+
+### 自定义转换器
+
+```python
+class FourDigitYearConverter:  
+regex = '[0-9]{4}'  
+def to_python(self, value):  
+	return int(value)  
+def to_url(self, value):  
+	return '%04d' % value  占四位，不够用0填满，超了则就按超了的位数来！
+register_converter(FourDigitYearConverter, 'yyyy')  
+			
+urlpatterns = [  
+		path('articles/2003/', views.special_case_2003),  
+		path('articles/<yyyy:year>/', views.year_archive),  
+		...  
+	]  
+```
+
+
+
+## FBV与CBV

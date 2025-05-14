@@ -36,6 +36,8 @@ urlpatterns = [
     re_path(r'del_book/(?P<id>\d+)', app01_views.del_book, name='del_book'),
     re_path(r'edit_book/(?P<id>\d+)', app01_views.edit_book, name='edit_book'),
 
-    path(r'app02/',include('app02.urls')),
-    path(r'app01/',include('app01.urls')),
+    path(r'app02/',include('app02.urls', namespace='app02')),
+    path(r'app01/',include('app01.urls', namespace='app01')),
+
+    path(r'pipei/<int:num>/', app01_views.pipei, name='pipei'),
 ]

@@ -21,8 +21,9 @@ def xxx(request,year):
     print(reverse('xxx', args=(year,)))
     return HttpResponse(b'hhhhhhhh')
 
-def index(request,*args):
-    print(reverse('app01_index',args=args))
+def index(request,**kwargs):
+
+    print(kwargs)
     return render(request, 'index.html')
 
 def login(request):
@@ -68,3 +69,8 @@ def edit_book(request, id):
     book = models.Book.objects.filter(id=id).first()
     publishs = models.Publish.objects.all()
     return render(request,'edit_book.html',{'book': book,'publishs': publishs})
+
+
+def pipei(request,**kwargs):
+    print(kwargs)
+    return HttpResponse(b'hello baby')
