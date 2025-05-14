@@ -80,10 +80,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'day53',
-        'HOST': '192.168.21.146',
+        'HOST': 'gxl.ddns.net',
         'PORT': 3306,
         'USER': 'root',
-        'PASSWORD': '123.com',
+        'PASSWORD': os.getenv("MYSQL_PASSWORD"),
         'CHARSET': 'utf8'
     }
 }
