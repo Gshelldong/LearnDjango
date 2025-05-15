@@ -40,4 +40,7 @@ urlpatterns = [
     path(r'app01/',include('app01.urls', namespace='app01')),
 
     path(r'pipei/<int:num>/', app01_views.pipei, name='pipei'),
+
+    path(r'json/',app01_views.return_json,name='app_json'),
+    path(r'up/',app01_views.upload_file,name='up'),
 ]

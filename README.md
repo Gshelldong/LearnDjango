@@ -384,6 +384,8 @@ django默认使用的是自带的sqlite数据库
 import pymysql
 pymysql.install_as_MySQLdb()
 ```
+## [day53]()
+
 ## django ORM
 
 ### ORM对象关系映射
@@ -887,5 +889,78 @@ urlpatterns = [
 ```
 
 
+
+## 前后端分离
+
+前端一个人干(前端转成自定义对象)
+	JSON.stringify()        json.dumps()
+	JSON.parse()		json.loads()
+后端另一个干(python后端用字典)
+只要涉及到数据交互,一般情况下都是用的json格式
+后端只负责产生接口,前端调用该接口能拿到一个大字典
+后端只需要写一个接口文档 里面描述字典的详细信息以及参数的传递。
+
+## 返回JSON对象
+
+可以被序列化的对象都可以当作json返回。
+
+
+
+```python
+# 方法一：
+def return_json(request):
+    data = {'name': '我是papi', 'age': 18}
+    res = json.dumps(data,ensure_ascii=False) # 不把内容进行转码
+    return HttpResponse(res)
+
+# 方法二：
+def return_json(request):
+    data = {'name': '我是papi', 'age': 18}
+    return JsonResponse(data, json_dumps_params={'ensure_ascii': False})
+
+```
+
+如果直接返回json的对象需要加
+
+```python
+return JsonResponse(l,safe=False)
+```
+
+request.get_full_path() 能够打印get请求过来的参数。
+request.path 只能能够打印uri部分。
+
+```python
+/json/?id=123456
+/json/
+```
+
+## 上传文件
+
+```bash
+# 前端实现
+            <form action="" enctype="multipart/form-data">
+              <div class="form-group">
+                <input type="file" class="form-control">
+              </div>
+                {% csrf_token %}
+              <button href="{% url 'add_book' %}" type="submit" class="btn btn-primary pull-right" formmethod="post" style="margin-top: 10px">保存</button>
+            </form>
+            
+# 路由
+path(r'up/',app01_views.upload_file,name='up'),
+
+# 后端代码
+def upload_file(request):
+    if request.method == 'POST':
+        file_obj = request.FILES.get('uploadfile')
+        print(file_obj.name) # 文件名
+        with open(file_obj.name, 'wb') as f:
+            for line in file_obj.chunks():
+                f.write(line)
+        return HttpResponse('收到了!')
+    return render(request,'uploadfile.html')
+```
+
+## [day54]()
 
 ## FBV与CBV

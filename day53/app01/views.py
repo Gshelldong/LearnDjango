@@ -1,4 +1,7 @@
+import json
+
 from django.shortcuts import render,HttpResponse,redirect,reverse
+from django.http import JsonResponse
 from app01 import models
 
 # Create your views here.
@@ -74,3 +77,27 @@ def edit_book(request, id):
 def pipei(request,**kwargs):
     print(kwargs)
     return HttpResponse(b'hello baby')
+
+# def return_json(request):
+#     data = {'name': '我是papi', 'age': 18}
+#     res = json.dumps(data,ensure_ascii=False)
+#     return HttpResponse(res)
+
+def return_json(request):
+    data = {'name': '我是papi', 'age': 18}
+    l = [1,2,3,4,5,6]
+    # return JsonResponse(data, json_dumps_params={'ensure_ascii': False})
+    print(request.get_full_path())
+    print(request.path)
+    return JsonResponse(l,safe=False)
+
+def upload_file(request):
+    if request.method == 'POST':
+        file_obj = request.FILES.get('uploadfile')
+        print(file_obj.name) # 文件名
+        with open(file_obj.name, 'wb') as f:
+            for line in file_obj.chunks():
+                f.write(line)
+        return HttpResponse('收到了!')
+    return render(request,'uploadfile.html')
+
