@@ -747,6 +747,7 @@ from app02 import views as app02_views
 # 主urls.py
         urlpatterns = [
 			url(r'^admin/', admin.site.urls),
+            # 推荐使用这种用法
 			url(r'^app01/',include('app01.urls')),
 			url(r'^app02/',include('app02.urls')),
 		]
@@ -961,6 +962,182 @@ def upload_file(request):
     return render(request,'uploadfile.html')
 ```
 
+
+
+request方法总结
+	request.method
+	request.GET
+	request.POST
+	request.FILES
+	request.body  # 原生的二进制数据
+
+RBAC (role based access control)
+基于角色的权限管理
+
+当你在做权限管理的时候 需要用到
+在web领域权限就是一个个的url
+简单判断用户是否有权限访问某个url思路
+	获取用户想要访问的url
+	与数据库中该用户可以访问的url进行对比
+
+
+
 ## [day54]()
 
+djiango中配置文件的配置，
+
+```bash
+# 如果xxx不存在就会使用后者的配置
+os.environ.setdefault('xxx','conf.settings')
+```
+
+
+
+## render原理
+
+返回的还是标准的HttpResponse
+
+```bash
+from django.template import Template,Context
+def re(request):
+    temp = Template('<h1>{{ user }}</h1>')
+    con = Context({"user":{"name":'jason',"password":'123'}})
+    res = temp.render(con)
+    print(res)
+    return HttpResponse(res)
+```
+
+
+
+
+
 ## FBV与CBV
+
+视图函数并不只是指函数 也可以是类
+	FBV(基于函数的视图) 面向函数式编程
+	CBV(基于类的视图)   面向对象式编程
+问题:基于CBV的视图函数 
+get请求来就会走类里面get方法,post请求来就会走类里面post方法 为什么???
+
+```python
+urls.py中
+	url(r'^login/',views.MyLogin.as_view())
+views.py中
+	from django.views import 
+	class MyLogin(View):
+		def get(self,request):
+			print("from MyLogin get方法")
+			return render(request,'login.html')
+		def post(self,request):
+			return HttpResponse("from MyLogin post方法")
+
+
+研究方向 
+	1.从url入手
+    # 由于函数名加括号执行优先级最高,所以这一句话一写完会立刻执行as_view()方法
+	url(r'^login/',views.MyLogin.as_view())  
+	
+	@classonlymethod
+	def as_view(cls, **initkwargs):  # cls就是我们自己的写的类 MyLogin
+		def view(request, *args, **kwargs):
+			self = cls(**initkwargs)  # 实例化产生MyLogin的对象  self = MyLogin(**ininkwargs)
+			if hasattr(self, 'get') and not hasattr(self, 'head'):
+				self.head = self.get
+			self.request = request
+			self.args = args
+			self.kwargs = kwargs
+			# 上面的几句话都仅仅是在给对象新增属性
+			return self.dispatch(request, *args, **kwargs)  # dispatch返回什么浏览器就会收到什么
+			# 对象在查找属性或者方法的时候,你一定要默念:
+            1.先从对象自己这里找
+            2.然后从产生对象的类里面找
+            3.最后类的父类依次往后
+		return view
+	
+	通过源码发现url匹配关系可以变形成
+	url(r'^login/',views.view)  # FBV和CBV在路由匹配上是一致的 都是url后面跟函数的内存地址
+	2.当浏览器中输入login 会立刻触发view函数的运行
+		def dispatch(self, request, *args, **kwargs):
+		    # Try to dispatch to the right method; if a method doesn't exist,
+		    # defer to the error handler. Also defer to the error handler if the
+		    # request method isn't on the approved list.
+		    # 我们先以GET为例
+            # 判断当前请求方法是否在默认的八个方法内
+		    if request.method.lower() in self.http_method_names:  
+		    	# 反射获取我们自己写的类产生的对象的属性或者方法
+		    	# 以GET为例  handler = getattr(self,'get','取不到报错的信息')
+		    	# handler = get(request)
+		    	handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
+		    else:
+		    	handler = self.http_method_not_allowed
+		    return handler(request, *args, **kwargs)  # 直接调用我们自己的写类里面的get方法
+		    # 源码中先通过判断请求方式是否符合默认的八个请求方法 然后通过反射获取到自定义类中的对应的方法执行
+```
+
+### CBV使用方法
+
+```python
+# urls.py
+    path('login/', views.MyLogin.as_view(), name='login'),
+
+# 视图中的函数定义
+from django.views import View
+class MyLogin(View):
+    def get(self,request):
+        return render(request,'login.html')
+    def post(self, request):
+        print(request.POST.get('username'))
+        return HttpResponse('成功')
+```
+
+## settings源码
+
+1.django除了暴露给用户一个settings.py配置文件之外自己内部还有一个全局的配置文件。
+2.我们在使用配置文件的时候可以直接直接导入暴露给用户的settings.py也可以使用django全局的配置文件并且后者居多。
+	from django.conf import settings
+3.django的启动入口是manage.py 
+
+```python
+import os
+import s
+if __name__ == "__main__":
+	# django在启动的时候 就会往全局的大字典中设置一个键值对  值是暴露给用户的配置文件的路径字符串
+	os.environ.setdefault("DJANGO_SETTINGS_MODULE", "day54.settings")
+
+class Settings(object):
+	def __init__(self, settings_module):  # settings_module = 'day54.settings'
+		# update this dict from global settings (but only for ALL_CAPS settings)
+		for setting in dir(global_settings):  # django全局配置文件
+			# dir获取django全局配置文件中所有的变量名
+			if setting.isupper():  # 判断文件中的变量名是否是大写如果是大写才会执行/生效
+                # 给settings对象设置键值对,settings[配置文件中大写的变量名] = 配置文件中大写的变量名所对应
+				setattr(self, setting, getattr(global_settings, setting)) 
+		# store the settings module in case someone later cares
+        # day54.setting
+		self.SETTINGS_MODULE = settings_module
+        # mod = 模块settings(暴露给用户的配置文件)
+		mod = importlib.import_module(self.SETTINGS_MODULE)  
+		for setting in dir(mod):  # for循环获取暴露给用户的配置文件中所有的变量名
+			if setting.isupper():  # 判断变量名是否是大写
+				setting_value = getattr(mod, setting)  # 获取大写的变量名所对应的值
+				setattr(self, setting, setting_value)  # 给settings对象设置键值对
+				"""
+				d = {}
+				d['username'] = 'jason'
+				d['username'] = 'egon'
+				用户如果配置了就用用户的
+				用户如果没有配置就用系统默认的
+				其实本质就是利用字典的键存在就是替换的原理 实现了用户配置就用用户的用户没配置就用默认的
+				"""
+	
+class LazySettings(LazyObject):
+	    def _setup(self, name=None):
+			# os.environ你可以把它看成是一个全局的大字典
+			settings_module = os.environ.get(ENVIRONMENT_VARIABLE)  # 从大字典中取值键为                       # DJANGO_SETTINGS_MODULE所对应的值:day54.settings
+			# settings_module = 'day54.settings'
+			self._wrapped = Settings(settings_module)  # Settings('day54.settings')
+			
+settings = LazySettings()  # 单例模式	
+```
+
+## 模板层
