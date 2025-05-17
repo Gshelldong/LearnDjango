@@ -9,6 +9,77 @@
     <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
 </head>
 <body>
-    <h1>{{ data }}</h1>
+    <h3>{{ n }}</h3>
+    <h3>{{ f }}</h3>
+    <h3>{{ s }}</h3>
+    <h3>{{ l }}</h3>
+    <h3>{{ d }}</h3>
+    <h3>{{ t }}</h3>
+    <h3>{{ se }}</h3>
+    <h3>{{ file_size }}</h3>
+    <h3>{{ info }}</h3>
+    <h3>{{ index }}</h3>
+    <h3>{{ index }}</h3>
+    <h3>{{ obj.get_self }}</h3>
+    <h3>{{ obj.get_cls }}</h3>
+    <h3>{{ obj.get_static }}</h3>
+    <h3>{{ zzz }}</h3>
+    <h3>{{ ctime }}</h3>
+
+    <h3>{{ num | default:'num是空的' }}</h3>
+    <h3>文件大小: {{ file_size | filesizeformat }}</h3>
+    <h3>{{ info1 | truncatewords:3 }}</h3>
+    <h3>{{ info | truncatechars:5 }}</h3>
+    {{ xxx | safe }}
+    {{ n | add:10 }}
+
+    {% for foo in l %}
+        <p>{{ foo }}</p>
+    {% endfor %}
+
+
+    <br>
+    {% for foo in l %}
+    <p>{{ forloop }}</p>
+    {% endfor %}
+
+    {% for foo in l %}
+        {% if forloop.first %}
+            <p>这是第一次</p>
+        {% elif forloop.last %}
+            <p>这是最后一次</p>
+            {% else %}
+            <p>come on!!!</p>
+        {% endif %}
+    {% endfor %}
+
+    <br>
+
+    {% with l.6.3 as name %}
+        {{ name }}
+    {% endwith %}
+
+    <br>
+
+    {% for key in d.keys %}
+        {{ key }}
+    {% endfor %}
+
+    {% for value in d.values %}
+        {{ value }}
+    {% endfor %}
+
+    {% for item in d.items %}
+        {{ item }}
+    {% endfor %}
+
+
+    {% load tag %}
+    {{ 12 | plugin:10 }}
+    {% jason 11 22 33 year=2025 %}
+
+
+
+
 </body>
 </html>

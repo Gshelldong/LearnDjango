@@ -1141,3 +1141,356 @@ settings = LazySettings()  # 单例模式
 ```
 
 ## 模板层
+
+### 模板传值
+
+python的所有数据类型都可传到模板中，python中的函数也可以传到模板中，但是不支持传参数。
+
+支持对象的方法，但是也不能传参数。
+
+django在模板取值的时候统一使用.
+
+```python
+# 模板使用变量的两种方式
+{{ }}
+{% %}
+```
+
+
+
+```python
+# 给模板传值的方式
+# 方式1
+    通过字典的键值对 指名道姓的一个个的传
+    return render(request,'reg.html',{'n':n,'f':f})
+# 方式2
+    locals会将它所在的名称空间中的所有的名字全部传递给前端
+    该方法虽然好用但是在某些情况下回造成资源的浪费
+```
+
+```python
+# 模板呢
+<body>
+    <h3>{{ n }}</h3>
+    <h3>{{ f }}</h3>
+    <h3>{{ s }}</h3>
+    <h3>{{ l }}</h3>
+    <h3>{{ d }}</h3>
+    <h3>{{ t }}</h3>
+    <h3>{{ se }}</h3>
+    <h3>{{ file_size }}</h3>
+    <h3>{{ info }}</h3>
+    <h3>{{ index }}</h3>
+    <h3>{{ index }}</h3>
+    <h3>{{ obj.get_self }}</h3>
+    <h3>{{ obj.get_cls }}</h3>
+    <h3>{{ obj.get_static }}</h3>
+    <h3>{{ zzz }}</h3>
+    <h3>{{ ctime }}</h3>
+</body>
+
+# views.py
+def reg(request):
+    # 先验证是否python所有的数据类型都可以被传递到前端
+    n = 0
+    # ss = ''
+    f = 1.11
+    s = '你妹的'
+    l = [1,2,3,4,5,6,[12,3,4,{'name':'heiheihei'}]]
+    d = {"name":'jason','password':123}
+    t = (1,2,3,4,5)
+    se = {1,2,3,4,5,6,7,}
+    file_size = 12312312
+
+    info = 'my name is jason and my age is 18'
+    info1 = '傻大姐 撒旦 技术 大 萨达 了 奥斯卡 的健康两 三点卡是考虑到'
+    def index(xxx):
+        print(xxx)
+        print('index')
+        return '我是index函数的返回值'
+
+    class Demo(object):
+        def get_self(self):
+            return '绑定给对象的方法'
+        @classmethod
+        def get_cls(cls):
+            return '绑定给类的方法'
+        @staticmethod
+        def get_static():
+            return '我是静态方法其实就是函数'
+    obj = Demo()
+
+    xxx = '<h1>波波棋牌室</h1>'
+    yyy = '<script>alert(123)</script>'
+    # 把html文本进行安全的返回
+    from django.utils.safestring import mark_safe
+
+    zzz = mark_safe('<h1>阿萨德搜啊第三款垃圾袋</h1>')
+
+    from datetime import datetime
+    ctime = datetime.now()
+
+    return render(request,'index.html',locals())  # 为了教学方便 我们以后就用locals()
+```
+
+### 模板语法过滤器
+
+在变量的后面使用,类似linux的管道符
+
+```bash
+{{ l | length }}
+
+
+# 常用的标签
+length         # 长度
+default        # {{ n|default:"如果n为空就返回这里的结果" }} 必须规定为空时候返回的值
+filesize       # 自动换算单位
+truncatewords   #截断字符，按照空格截取，多余的就会显示...
+                {{ info1 | truncatewords:3 }}
+truncatechars   #按字符长度截取,空格算一个字符,三个点算一个字符
+                {{ info | truncatechars:5 }}
+safe            # 把python的html变量直接渲染
+date            # 格式化时间
+                {{ ctime | date:"FORMAT" }}
+slice           # 切片
+add             # 算数+
+```
+
+### 模板语法标签
+
+逻辑相关
+
+```python
+# for循环取值
+    {% for foo in l %}
+        <p>{{ foo }}</p>
+    {% endfor %}
+    
+# forloop每个循环对象的属性
+    <br>
+    {% for foo in l %}
+    <p>{{ forloop }}</p>
+    {% endfor %}
+{'parentloop': {}, 'counter0': 0, 'counter': 1, 'revcounter': 7, 'revcounter0': 6, 'first': True, 'last': False}
+{'parentloop': {}, 'counter0': 1, 'counter': 2, 'revcounter': 6, 'revcounter0': 5, 'first': False, 'last': False}
+{'parentloop': {}, 'counter0': 2, 'counter': 3, 'revcounter': 5, 'revcounter0': 4, 'first': False, 'last': False}
+{'parentloop': {}, 'counter0': 3, 'counter': 4, 'revcounter': 4, 'revcounter0': 3, 'first': False, 'last': False}
+{'parentloop': {}, 'counter0': 4, 'counter': 5, 'revcounter': 3, 'revcounter0': 2, 'first': False, 'last': False}
+{'parentloop': {}, 'counter0': 5, 'counter': 6, 'revcounter': 2, 'revcounter0': 1, 'first': False, 'last': False}
+{'parentloop': {}, 'counter0': 6, 'counter0counter0': 7, 'revcounter': 1, 'revcounter0': 0, 'first': False, 'last': True}
+
+counter0  索引
+counter  循环次数
+first    是否是第一个
+last     是否是最后一个
+
+#  条件判断,l是一个列表
+{% for foo in l %}
+    {% if forloop.first %}
+        <p>这是第一次</p>
+    {% elif forloop.last %}
+        <p>这是最后一次</p>
+        {% else %}
+        <p>come on!!!</p>
+    {% endif %}
+{% endfor %}
+
+这是第一次
+come on!!!
+come on!!!
+come on!!!
+come on!!!
+come on!!!
+这是最后一次
+
+
+# 赋值别名，使用场景在嵌套的数据中，复杂的取值取一个别名，然后就可以重复使用别名
+l = [1,2,3,4,5,6,[12,3,4,{'name':'heiheihei'}]]
+
+    {% with l.6.3 as name %}
+        {{ name }}
+    {% endwith %}
+    
+# 取值结果
+{'name':'heiheihei'}
+
+# 字典的三个方法
+keys
+items
+values
+# 字典
+d = {"name":'jason','password':123}
+
+{% for key in d.keys %}
+    {{ key }}
+{% endfor %}
+
+{% for value in d.values %}
+    {{ value }}
+{% endfor %}
+
+{% for item in d.items %}
+    {{ item }}
+{% endfor %}
+
+# 取值结果
+name password
+jason 123
+('name', 'jason') ('password', 123)
+```
+
+### 自定义标签过滤器
+
+自定义固定的三步走战略:
+1.必须在你的应用下新建一个名为`templatetags`文件夹
+2.在该文件夹内新建一个任意名称的py文件
+3.在该py文件中固定先写下面两句代码
+
+自定义过滤器只能有两个形参。但是可以把参数组合程其他数据类型然后再解开。
+
+```python
+from  django import template
+register = template.Library()
+
+# 自定义过滤器tag.py
+@register.filter(name='baby')
+def index(a,b):
+	# 该过滤器只做一个加法运算是|add简易版本
+	"""
+	|length
+	|add
+	|default
+	|filesizeformat
+	|truncatewords
+	|truncatechars
+	|safe
+	|slice
+
+	:param a:
+	:param b:
+	:return:
+	"""
+	print('下午刚起床 一脸懵逼')
+	return a + b
+
+# 前端引用
+    {% load tag %}
+    {{ 12 | baby:10 }}
+    
+# 结果： 22
+```
+
+```python
+# 自定义标签
+# 支持传多个值
+@register.simple_tag(name='jason')
+def xxx(a,b,c,year):
+	return '%s?%s|%s{%s'%(a,b,c,year)
+
+# 前端传值
+{% jason 11 22 33 year=2025 %}
+```
+
+```python
+# 自定义inclusion_tag
+"""
+接收用户传入的参数然后作用于一个html页面
+在该页面上渲染数据之后将渲染好的页面
+放到用户调用inclusion_tag的地方
+"""
+# 写好的部分组件bigplus.html
+<ul>
+    {% for foo in l %}
+        <li>{{ foo }}</li>
+    {% endfor %}
+</ul>
+
+
+
+# 自定义inclusion_tag
+# 这里需要传入一个模板
+@register.inclusion_tag('bigplus.html')
+def bigplus(n):
+	l = []
+	for i in range(n):
+		l.append('第%s项'%i)
+	return {'l':l}
+
+# 在前端的任意页面引用
+    {% load tag %}
+    {% bigplus 5 %}
+    
+# 渲染的结果
+ 登录
+第0项
+第1项
+第2项
+第3项
+第4项
+```
+
+### 模板的继承
+
+当多个页面整体的样式都大差不差的情况下可以设置一个模板文件。
+在该模板文件中使用block块划分多个分块。
+之后子版在使用模板的时候可以通过block块的名字来选定到底需要修改哪一部分区域。
+
+模板一般情况下 应该至少有三个可以被修改的区域
+```django
+{% block css %}
+	子页面自己的css代码
+{% endblock %}
+
+{% block content %}
+	子页面自己的html代码
+{% endblock %}
+
+{% block js %}
+	子页面自己的js代码
+{% endblock %}
+
+
+
+# 模板的继承使用方式
+{% extends 'home.html' %}
+
+{% block css %}
+	<style>
+		h1 {
+			color: red;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+<h1>登陆页面</h1>
+	<form action="">
+		<p>username:<input type="text" class="form-control"></p>
+		<p>password:<input type="text" class="form-control"></p>
+		<input type="submit" class="btn btn-danger">
+	</form>
+{% endblock %}
+
+{% block js %}
+...
+{% endblock %}
+
+# 一般情况下模板上的block越多页面的可扩展性就越强。
+```
+
+### 模板的导入
+
+当你写了一个特别好看的form表单胡总和是列表标签，可以当作一个模板在哪里需要就在哪里导入。
+
+```python
+# 1.templates中定义漂亮的样式befaultful.html
+
+# 2.在要引用的html文件中，引用
+{% include 'befaultful.html' %}
+```
+
+
+
+作业：图书管理系统尝试使用模板的继承来写。
+
+## 模型层

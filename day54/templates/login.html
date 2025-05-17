@@ -13,6 +13,8 @@
     <p href="#d1">用户名</p><input type="text" id="d1" name="username">
     {% csrf_token %}
     <button type="submit" class="btn-primary">登录</button>
+    {% load tag %}
+    {% bigplus 5 %}
 </form>
 </body>
 </html>
