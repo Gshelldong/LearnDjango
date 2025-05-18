@@ -77,8 +77,14 @@ WSGI_APPLICATION = 'day54.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'day54',
+        'HOST': 'gxl.ddns.net',
+        'PORT': 3306,
+        'USER': 'root',
+        # 'PASSWORD': os.getenv("MYSQL_PASSWORD"),
+        'PASSWORD': '123dd.1a',
+        'CHARSET': 'utf8'
     }
 }
 

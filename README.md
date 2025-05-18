@@ -1494,3 +1494,105 @@ def bigplus(n):
 作业：图书管理系统尝试使用模板的继承来写。
 
 ## 模型层
+
+test.py中配置models查询数据库。
+
+复制manager.py中的django配置文件。
+
+```python
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'day54.settings')
+
+import django
+django.setup()
+```
+
+
+
+### 单表查询必回13条
+
+```python
+# 1.查询表中所有对象
+models.Book.objects.all()
+
+# 增加数据
+    # 方式1： create
+    book_obj  = models.Book.objects.create(title='三国',price=19.99,create_time='2019-11-11')
+    print(book_obj.title)
+    
+    # 方式2：对象点save()方法
+    from datetime import datetime
+    ctime = datetime.now()
+    book_obj = models.Book(title='金瓶梅',price=96.66,create_time=ctime)
+    book_obj.save()
+    
+# 2.条件查询
+print(models.Book.objects.filter(id=1))
+print(models.Book.objects.get(id=1))
+print(models.Book.objects.get(pk=1))  # 会自动找到该表的主键作为查询条件，扩展性更好。
+
+
+# 3.修改数据
+models.Book.objects.filter(pk=1).update(price='88') # 修改价格为88
+# 或者
+book_obj = models.Book.objects.get(pk=2)
+book_obj.price = 71 # 修改价格为71
+book_obj.save()
+
+# 4.删除对象
+models.Book.objects.filter(pk=2).delete()
+
+# 5.条件查询
+# 它包含了与所给筛选条件相匹配的对象
+print(models.Book.objects.filter(pk=1))
+
+# 返回与所给筛选条件相匹配的对象，返回结果有且只有一个，如果符合筛选条件的对象超过一个或者没有都会抛出错误。
+print(models.Book.objects.get(pk=1))
+
+
+# 6.反向查询
+# 它包含了与所给筛选条件不匹配的所有对象
+print(models.Book.objects.exclude(pk=1))
+
+# 7.查询结果排序
+print(models.Book.objects.order_by('price')) #默认升序
+print(models.Book.objects.order_by('-price'))  # -就是降序
+
+# 8.对结果反向排序，需要现有排序才行
+print(models.Book.objects.order_by('price').reverse())
+
+# 9.统计查询结果条数
+print(models.Book.objects.filter(title='西游记').count())
+
+# 10.查询返回结果的第一条和最后一条
+print(models.Book.objects.all().first())
+print(models.Book.objects.all().last())
+
+# 11.判断是否有返回结果的布尔值
+如果不存在数据返回结果是None布尔值本身也是false
+print(models.Book.objects.filter(pk=1).exists())
+
+# 12.查询特定字段
+# 返回一个ValueQuerySet——一个特殊的QuerySet，运行后得到的并不是一系列
+# model的实例化对象，而是一个可迭代的字典序列
+# 得到的结果是列表套字典
+print(models.Book.objects.values('title', 'price'))
+<QuerySet [{'title': '红楼梦', 'price': Decimal('88.00')}, 
+           {'title': '西游记', 'price': Decimal('54.00')}, 
+           {'title': '水浒传', 'price': Decimal('89.00')}, 
+           {'title': '三国演义', 'price': Decimal('42.00')}, 
+           {'title': '西游记', 'price': Decimal('35.00')}]>
+
+
+# 13. values_list(*field): 它与values()
+print(models.Book.objects.values_list('title','price'))  # 得到的结果是列表套元组,不经常使用
+
+
+# 非常相似，它返回的是一个元组序列，values返回的是一个字典序列
+# 14.distinct(): 从返回结果中剔除重复纪录
+    """
+    去重的前提是 一定要有完全重复的数据 才能去重
+    """
+print(models.Book.objects.filter(title='三国演义').distinct())
+print(models.Book.objects.values('title','price','create_time').distinct())
+```
+
