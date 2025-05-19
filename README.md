@@ -1264,6 +1264,7 @@ add             # 算数+
 # for循环取值
     {% for foo in l %}
         <p>{{ foo }}</p>
+        {% empty %} 当for循环对象不能被for循环的时候会走empty逻辑
     {% endfor %}
     
 # forloop每个循环对象的属性
@@ -1596,3 +1597,4 @@ print(models.Book.objects.filter(title='三国演义').distinct())
 print(models.Book.objects.values('title','price','create_time').distinct())
 ```
 
+## 双下划线查询
