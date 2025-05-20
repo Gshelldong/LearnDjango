@@ -1649,8 +1649,14 @@ res = models.Book.objects.filter(title__startswith='红')
 # 什么结尾
 res1 = models.Book.objects.filter(title__endswith='记')
 
-
 # 查询出版日期是2021年的
 res = models.Book.objects.filter(create_time__year=2024)
 ```
 
+跨表查询
+
+1.day55 -> test.py
+
+1. 外键查询
+2. 多对多查询
+3. 跨表查询
