@@ -79,4 +79,42 @@ from app01 import models
 # print(models.Book.objects.values_list('title', 'price'))
 
 # 对查询的返回结果进行去重，内容必须是一样的才行
-print(models.Book.objects.values('title').distinct())
+# print(models.Book.objects.values('title').distinct())
+
+# 查询价格大于50的书籍
+# res = models.Book.objects.filter(price__gt = 50)
+# print(res)
+#
+# 查询价格小于50的书籍
+# res = models.Book.objects.filter(price__lt = 50)
+# print(res)
+
+# 查询的大于等于或者小于等于
+# res = models.Book.objects.filter(price__lte = 42)
+# res1 = models.Book.objects.filter(price__gte = 42)
+# print(res)
+# print(res1)
+
+# 查询加个是88或者35或者42的书籍
+# res = models.Book.objects.filter(price__in=[88,35,42])
+# print(res)
+
+# 查询价格在50到100之间的书籍,开头结尾都包含
+# res = models.Book.objects.filter(price__range=(50,100))
+# print(res)
+
+# 模糊查询,数据名称包含'记'的。
+# 如果是英文结尾的可以使用title__icontains可以忽略大小写。
+# res = models.Book.objects.filter(title__contains='记')
+# print(res)
+
+# 查询书籍名称是以3开头的
+# res = models.Book.objects.filter(title__startswith='红')
+# 什么结尾
+# res1 = models.Book.objects.filter(title__endswith='记')
+# print(res)
+# print(res1)
+
+# 查询出版日期是2021年的
+res = models.Book.objects.filter(create_time__year=2024)
+print(res)

@@ -1142,6 +1142,30 @@ settings = LazySettings()  # 单例模式
 
 ## 模板层
 
+打印执行的sql配置，在`settings.py`中的任意位置配置。
+
+```python
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console':{
+            'level':'DEBUG',
+            'class':'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level':'DEBUG',
+        },
+    }
+}
+```
+
+
+
 ### 模板传值
 
 python的所有数据类型都可传到模板中，python中的函数也可以传到模板中，但是不支持传参数。
@@ -1598,3 +1622,35 @@ print(models.Book.objects.values('title','price','create_time').distinct())
 ```
 
 ## 双下划线查询
+
+```python
+# 查询价格大于50的书籍
+res = models.Book.objects.filter(price__gt = 50)
+
+# 查询价格小于50的书籍
+res = models.Book.objects.filter(price__lt = 50)
+
+# 查询的大于等于或者小于等于
+res = models.Book.objects.filter(price__lte = 42)
+res1 = models.Book.objects.filter(price__gte = 42)
+
+# 查询加个是88或者35或者42的书籍
+res = models.Book.objects.filter(price__in=[88,35,42])
+
+# 查询价格在50到100之间的书籍,开头结尾都包含
+res = models.Book.objects.filter(price__range=(50,100))
+
+# 模糊查询,数据名称包含'记'的。
+# 如果是英文结尾的可以使用title__icontains可以忽略大小写。
+res = models.Book.objects.filter(title__contains='记')
+
+# 查询书籍名称是以3开头的
+res = models.Book.objects.filter(title__startswith='红')
+# 什么结尾
+res1 = models.Book.objects.filter(title__endswith='记')
+
+
+# 查询出版日期是2021年的
+res = models.Book.objects.filter(create_time__year=2024)
+```
+
