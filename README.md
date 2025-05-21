@@ -411,7 +411,7 @@ class User(models.Model):
 | IntegerField(null=True)                     | 允许为空                          |
 | CharField(max_length=32, default='China')   | 默认值china                       |
 | DecimalField(max_digits=8,decimal_places=2) | 浮点型，总共8位，保留小数点后两位 |
-|                                             |                                   |
+| EmailField()                                | 就是varchar(254)                  |
 
 **需要执行数据库迁移(同步)命令**,只要修改了模型就必须这样修改。
 
@@ -1653,10 +1653,81 @@ res1 = models.Book.objects.filter(title__endswith='记')
 res = models.Book.objects.filter(create_time__year=2024)
 ```
 
-跨表查询
+### 跨表查询
+
+#### 一对多的增删改查
+
+1.一对多字段增加数据，有两种方法一种是直接给外键字段赋值外键的id，或者先把外键对象查出来赋值外键对象。
+
+增加一本书籍，指定出版社。
+
+```python
+# 方法一:
+# models.Book.objects.create(title='钢铁是怎样练成的',price='50.32',publish_date='2025-05-04',publish_id=5)
+
+
+# 方法二:
+# 先把出版社对象查出来
+publish_obj = models.Publish.objects.filter(id=1).first()
+# 然后再复制
+models.Book.objects.create(title='三国演义',price='154',publish_date='2015-07-01',publish=publish_obj)
+```
+
+2.修改书籍的出版社
+
+```bash
+# 方法一：
+models.Book.objects.filter(title='Java核心技术').update(publish_id = 3)
+
+# 方法二：
+publish_obj = models.Publish.objects.filter(id=2).first()
+models.Book.objects.filter(title='Java核心技术').update(publish=publish_obj)
+```
+
+3.删除出版社，对应的书籍也会被删除`on_delete=models.CASCADE`。
+
+```python
+# 删除出版社
+models.Publish.objects.filter(pk=1).delete()
+```
+
+
+
+#### 多对多字段的增删改查
+
+4.给书籍添加出版社
+
+`add()`是给书籍添加作者括号内既可以传数字也可以传对象并且支持一次性传多个逗号隔开即可.
+
+```python
+# 给书籍钢铁是怎样练成的添加两个作者
+book_obj = models.Book.objects.filter(title='钢铁是怎样练成的').first() # type: models.Book
+book_obj.authors.add(9,10) # 直接使用作者表的主键id
+
+# 另一种方式
+author1 = models.Author.objects.filter(id=5).first()
+author2 = models.Author.objects.filter(id=6).first()
+book_obj = models.Book.objects.filter(pk=14).first() # type: models.Book
+book_obj.authors.add(author1,author2)
+```
+
+改
+
+```python
+# 把《java编程思想》的作者修改为2,5
+book_obj = models.Book.objects.filter(title='Java编程思想').first() # type: models.Book
+author1 = models.Author.objects.filter(pk=2).first()
+author2 = models.Author.objects.filter(pk=5).first()
+book_obj.authors.set([author1, author2])
+```
+
+
+
+
 
 1.day55 -> test.py
 
 1. 外键查询
 2. 多对多查询
 3. 跨表查询
+
