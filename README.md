@@ -1720,14 +1720,140 @@ author1 = models.Author.objects.filter(pk=2).first()
 author2 = models.Author.objects.filter(pk=5).first()
 book_obj.authors.set([author1, author2])
 ```
+`set()`括号内需要传一个可迭代对象可迭代对象中可以是多个数字组合也可以是多个对象组合但是不要混着用。
+
+给书籍删除作者对象
+
+`remove()`括号内既可以传数字也可以传对象并且支持传对个逗号隔开即可。
+
+```python
+book_obj = models.Book.objects.filter(title='计算机图形学').first() # type: models.Book
+book_obj.authors.remove(10)  # 删除id是10的作者id
+
+# 方法二:
+author1 = models.Author.objects.filter(pk=1).first()
+author2 = models.Author.objects.filter(pk=2).first()
+book_obj.authors.remove(author1,author2)
+```
+
+将某本书和作者的关系全部清空
+
+```python
+book_obj = models.Book.objects.filter(pk=5).first()
+book_obj.authors.clear()
+```
+
+#### 正向查询与反向查询
+
+正向与反向的概念
+
+一对一
+正向：author---关联字段在author表里--->authordetail		按字段
+反向：authordetail---关联字段在author表里--->author		按表名小写
+
+一对多
+正向：book---关联字段在book表里--->publish		按字段
+反向：publish---关联字段在book表里--->book		按表名小写_set.all() 因为一个出版社对应着多个图书
+
+多对多
+正向：book---关联字段在book表里--->author		按字段
+反向：author---关联字段在book表里--->book		按表名小写_set.all() 因为一个作者对应着多个图书
+
+正向查询按外键字段
+反向查询按表名小写
+
+基于对象的跨表查询(子查询:将一张表的查询结果当做另外一个查询语句的条件)
+
+强调: 在书写orm语句的时候跟写sql语句一样不要尝试着一次性写完应该做到写一点看一点再一点。
+
+当反向查询的结果是多个的时候需要使用`表小写_set`。
+
+```python
+# 查询书籍深度学习的出版社名称
+book_obj = models.Book.objects.filter(title='深度学习').first() # type: models.Book
+print(book_obj.publish.name)
+
+# 查询书籍深度学习的作者
+book_obj = models.Book.objects.filter(title='深度学习').first() # type: models.Book
+authors, = book_obj.authors.all()
+print(authors.name)
+
+# 查询作者王五的家庭地址
+author = models.Author.objects.filter(name='王五').first() # type: models.Author
+print(author.author_detail.addr)
+
+# 查询北京大学出版社的出版的书籍
+publish_obj = models.Publish.objects.filter(name='北京大学出版社').first() # type: models.Publish
+books = publish_obj.book_set.all()
+for book in books:
+    print(book.title)
+
+# 查询作者是jason写过的所有书籍pk是作者id
+author_obj = models.Author.objects.filter(pk=3).first() # type: models.Author
+books = author_obj.book_set.all()
+for book in books:
+    print(book.title)
+
+# 查询电话号码13000130010的作者
+detail = models.AuthorDetail.objects.filter(phone=13000130010).first() # type: models.AuthorDetail
+print(detail.author.name)
+
+
+# 查询书籍《数据库系统概念》的作者的电话号码
+book_obj = models.Book.objects.filter(title='数据库系统概念').first() # type: models.Book
+for auther in book_obj.authors.all(): # 这里返回的是一个列表所以要循环一下
+    print(auther.author_detail.phone)
+```
+
+#### 联合查询
+
+基于双下划綫的跨表查询(连表操作)
+
+- left join
+- inner join
+- right join
+- union
+
+```python
+# 查询钱七的手机号
+res = models.Author.objects.filter(name='钱七').values('author_detail__phone','author_detail__addr')
+print(res.first())
+
+## 反向查询
+res1 = models.AuthorDetail.objects.filter(author__name='钱七').values('author__age')
+print(res1)
+
+# 查询作者张三的年龄和手机号
+res = models.Author.objects.filter(name='张三').values('age', 'author_detail__phone')
+print(res)
+## 反向查询
+res = models.AuthorDetail.objects.filter(author__name='张三').values('author__age', 'phone')
+print(res)
+
+# 查询手机号码是13200132008的作者年龄和姓名
+## 正向
+res = models.Author.objects.filter(author_detail__phone=13200132008).values('name', 'age')
+print(res)
+
+## 反向
+res = models.AuthorDetail.objects.filter(phone=13200132008).values('author__name', 'author__age')
+print(res)
+
+# 查询书籍id是1 的作者的电话号码
+# 只要表里面有外键字段 你就可以无限制跨多张表
+res = models.Book.objects.filter(pk=7).values('authors__author_detail__phone')
+# res1 = models.Book.objects.filter(pk=1).values('外键字段1__外键字段2__外键字段3__普通字段')
+print(res)
+
+# 查询出版社为清华大学出版社的所有图书的名字和价格
+res = models.Publish.objects.filter(name='清华大学出版社').values('book__title','book__price')
+print(res)
+
+# 2.查询北方出版社出版的价格大于19的书
+res = models.Book.objects.filter(price__gt=19,publish__name='北方出版社').values('title','publish__name')
+print(res)
+```
 
 
 
-
-
-1.day55 -> test.py
-
-1. 外键查询
-2. 多对多查询
-3. 跨表查询
-
+#### 聚合查询
