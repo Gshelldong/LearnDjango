@@ -1,12 +1,24 @@
 from django.db import models
 
 # Create your models here.
+
+# 自定义字段
+class MyChar(models.Field):
+    def __init__(self,max_length,*args,**kwargs):
+        self.max_length = max_length
+        super().__init__(max_length=max_length,*args,**kwargs)
+
+    def db_type(self, connection):
+        return  'char(%s)'%self.max_length
+
+
 class Book(models.Model):
     title = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=8,decimal_places=2)
     publish_date = models.DateField(auto_now_add=True)
     kucun = models.IntegerField(null=True)
     maichu = models.IntegerField(null=True)
+    desc = MyChar(max_length=64, null=True)
 
     # 默认和Publish表的主键为外键
     publish = models.ForeignKey(to="Publish",on_delete=models.CASCADE)

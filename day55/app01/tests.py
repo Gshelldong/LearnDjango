@@ -124,3 +124,72 @@ from app01 import models
 # 查询出版社为清华大学出版社的所有图书的名字和价格
 # res = models.Publish.objects.filter(name='清华大学出版社').values('book__title','book__price')
 # print(res)
+
+
+# 聚合查询
+from django.db.models import Max,Min,Count,Avg,Sum
+
+# res1 = models.Book.objects.aggregate(Max('price'))
+# res2 = models.Book.objects.aggregate(Min('price'))
+# res3 = models.Book.objects.aggregate(Count('title'))
+# res4 = models.Book.objects.aggregate(Avg('price'))
+# res5 = models.Book.objects.aggregate(Sum('price'))
+# print(res1,res2,res3,res4,res5)
+
+# 统计每本书的作者个数
+# res = models.Book.objects.annotate(author_num = Count('authors')).values('author_num', 'title')
+# print(res)
+
+# 统计每个出版社价格最便宜的书
+# res = models.Publish.objects.annotate(mmp = Min('book__price')).values('name','mmp')
+# print(res)
+
+# 统计作者不止一个的图书
+"""
+只要是queryset对象
+就可以无限制的调用queryset对象的方法!!!
+最最常用的就是对一个已经filter过滤完的数据
+再进行更细化的筛选
+"""
+# res = models.Book.objects.annotate(author_num = Count('authors')).filter(author_num__gt=1)
+# print(res)
+
+# 查询各个作者出的书的总价格
+# res = models.Author.objects.annotate(sp=Sum('book__price')).values('name','sp')
+# print(res)
+
+# F查询与Q查询
+from django.db.models import F
+
+# F查询的本质就是从数据库中获取某个字段的值
+# 查询库存数大于卖出数的书籍
+"""之前查询等号后面的条件都是我们认为输入的
+    现在变成了需要从数据库中获取数据放在等号后面
+"""
+# res = models.Book.objects.filter(kucun__gt=F('maichu'))
+# print(res)
+
+# 将库存的数量加1000
+# models.Book.objects.update(kucun=F('kucun')+1000)
+
+# from django.db.models.functions import Concat
+# from django.db.models import Value
+# # 把指定的书后面加上新款
+# models.Book.objects.filter(pk=5).update(title=Concat(F('title'),Value('-新款')))
+
+# Q查询
+# 查询书籍名称是三国演义或者价格是444.44
+from django.db.models import Q
+
+# res = models.Book.objects.filter(title='三国演义',price=444.44)  # filter只支持and关系
+# res1 = models.Book.objects.filter(Q(title='深度学习'),Q(price=130))  # 如果用逗号那么还是and关系
+# res2 = models.Book.objects.filter(Q(title='深度学习')|Q(price=79))  # | 是或者的意思
+# res3 = models.Book.objects.filter(~Q(title='三国演义')|Q(price=79))  # ~表示取反
+
+# Q高级用法
+q = Q()
+q.connector = 'or'  # 修改查询条件的关系   默认是and
+q.children.append(('title__contains','深度学习'))  # 往列表中添加筛选条件
+q.children.append(('price__gt',79))  # 往列表中添加筛选条件
+res = models.Book.objects.filter(q)  # filter支持你直接传q对象  但是默认还是and关系
+print(res)

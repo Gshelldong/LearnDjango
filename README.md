@@ -404,14 +404,40 @@ class User(models.Model):
 	username = models.CharField(max_length=32)  # username varchar(32)   CharField必须要指定max_length参数
 	password = models.IntegerField()  # password int
 ```
-| 字段                                        | mysql中的类型                     |
-| ------------------------------------------- | --------------------------------- |
-| CharField(max_length=32)                    | varchar(32)                       |
-| IntegerField                                | int                               |
-| IntegerField(null=True)                     | 允许为空                          |
-| CharField(max_length=32, default='China')   | 默认值china                       |
-| DecimalField(max_digits=8,decimal_places=2) | 浮点型，总共8位，保留小数点后两位 |
-| EmailField()                                | 就是varchar(254)                  |
+| 字段                                        | mysql中的类型                                                |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| CharField(max_length=32)                    | varchar(32)                                                  |
+| IntegerField                                | int                                                          |
+| IntegerField(null=True)                     | 允许为空                                                     |
+| CharField(max_length=32, default='China')   | 默认值china                                                  |
+| DecimalField(max_digits=8,decimal_places=2) | 浮点型，总共8位，保留小数点后两位                            |
+| EmailField()                                | 就是varchar(254)                                             |
+| DateField()                                 | 年月日                                                       |
+| DateTimeField()                             | 年月日-时分秒 auto_now m每次修改都会更新时间<br />auto_now_add只有在创建的时候生成 |
+| BooleanField()                              | orm中的布尔值，数据库中存的是0和1                            |
+| TextField()                                 | 文本类型                                                     |
+| FileField(Filed)                            | 字符串， 文件路径保存到数据库；如果指定了upload_to=参数会把上传的文件直接放在对应的目录下。 |
+| FloadField()                                | 浮点型                                                       |
+
+unique=True 是否是唯一的
+
+db_index=True 为该字段0添加索引
+
+on_delete 关联字段，删除关联数据时的关联行为。
+
+#### 自定义字段
+
+```python
+class MyChar(models.Field):
+    def __init__(self,max_length,*args,**kwargs):
+        self.max_length = max_length
+        super().__init__(max_length=max_length,*args,**kwargs)
+        
+    def db_type(self, connection):
+        return  'char(%s)'%self.max_length
+```
+
+
 
 **需要执行数据库迁移(同步)命令**,只要修改了模型就必须这样修改。
 
@@ -1857,3 +1883,122 @@ print(res)
 
 
 #### 聚合查询
+
+```python
+# 聚合查询
+from django.db.models import Max,Min,Count,Avg,Sum
+
+res1 = models.Book.objects.aggregate(Max('price'))
+res2 = models.Book.objects.aggregate(Min('price'))
+res3 = models.Book.objects.aggregate(Count('title'))
+res4 = models.Book.objects.aggregate(Avg('price'))
+res5 = models.Book.objects.aggregate(Sum('price'))
+print(res1,res2,res3,res4,res5)
+```
+
+#### 分组查询
+
+```python
+from django.db.models import Max, Min, Count, Avg, Sum
+
+# 统计每本书的作者个数
+res = models.Book.objects.annotate(author_num = Count('authors')).values('author_num', 'title')
+print(res)
+
+# 统计每个出版社价格最便宜的书
+res = models.Publish.objects.annotate(mmp = Min('book__price')).values('name','mmp')
+print(res)
+
+# 统计作者不止一个的图书
+"""
+只要是queryset对象
+就可以无限制的调用queryset对象的方法!!!
+最最常用的就是对一个已经filter过滤完的数据
+再进行更细化的筛选
+"""
+res = models.Book.objects.annotate(author_num = Count('authors')).filter(author_num__gt=1)
+print(res)
+
+# 查询各个作者出的书的总价格
+res = models.Author.objects.annotate(sp=Sum('book__price')).values('name','sp')
+print(res)
+```
+
+#### 查询与Q查询
+
+```python
+from django.db.models import F
+
+"""
+F查询的本质就是从数据库中获取某个字段的值,查询库存数大于卖出数的书籍。
+之前查询等号后面的条件都是我们认为输入的,现在变成了需要从数据库中获取数据放在等号后面。
+"""
+res = models.Book.objects.filter(kucun__gt=F('maichu'))
+
+# 将库存的数量加1000
+models.Book.objects.update(kucun=F('kucun')+1000)
+
+from django.db.models.functions import Concat
+from django.db.models import Value
+# 把指定的书后面加上新款
+models.Book.objects.filter(pk=5).update(title=Concat(F('title'),Value('-新款')))
+
+# Q查询
+# 查询书籍名称是三国演义或者价格是444.44
+from django.db.models import Q
+
+res = models.Book.objects.filter(title='三国演义',price=444.44)  # filter只支持and关系
+res1 = models.Book.objects.filter(Q(title='深度学习'),Q(price=130))  # 如果用逗号那么还是and关系
+res2 = models.Book.objects.filter(Q(title='深度学习')|Q(price=79))  # | 是或者的意思
+res3 = models.Book.objects.filter(~Q(title='三国演义')|Q(price=79))  # ~表示取反
+
+# Q高级用法
+q = Q()
+q.connector = 'or'  # 修改查询条件的关系默认是and
+q.children.append(('title__contains','深度学习'))  # 往列表中添加筛选条件
+q.children.append(('price__gt',79))  # 往列表中添加筛选条件
+res = models.Book.objects.filter(q)  # filter支持你直接传q对象但是默认还是and关系
+print(res)
+```
+
+### 查询优化
+
+```python
+defer与only
+res = models.Author.objects.all().values('name')  
+# 这样虽然能拿到对象的name属性值，但是已经是queryset里面套字典的格式，我现在想拿到queryset里面放的还是一个个的对象，并且这这些对象“只有”name属性，其他属性也能拿，但是会重新查询数据库，类似于for循环N次走N次数据库查询
+res = models.Author.objects.all().only('name')  # 一旦指导了only就不要取对象没有的属性值了，如果指定了就会循环的去查找数据库。
+
+res = models.Author.objects.all().defer('title')
+
+defer与only刚好相反，取不包括括号内的其他属性值
+
+
+# select_related和prefetch_related
+# 如果使用的是all()字段会通过sql联表，直接连表操作select_related里面只能放外键字段而且只能放一对一和一对多的字段，代码会把外键的字段整合成一个表再进行查询，效率会更高。
+# 如果外键表中还有外键可以使用models.Book.objects.all().select_related('外键1__外键2__外键3')
+res = models.Book.objects.all().select_related('publish')
+
+# prefetch_related 不主动联表
+res = models.Book.objects.all().prefetch_related('publish')
+
+# 先把表的结果查出来，然后讲几个表查询的结果来进行处理，省去了联表的时间。
+```
+
+
+
+### 数据库事务
+
+```python
+from django.db import transaction
+
+with transaction.atomic():
+    """数据库操作
+    比如添加书籍和添加作者要同时进行且数据要保证AICD就使用事务
+    在该代码块中书写的操作同属于一个事务
+    """
+print('出了代码块事务就结束')
+```
+
+
+
