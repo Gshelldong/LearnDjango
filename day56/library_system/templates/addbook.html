@@ -1,0 +1,34 @@
+{% extends 'home.html' %}
+
+{% block content %}
+<form>
+  <div class="form-group">
+    <label for="exampleFormControlInput1">名称</label>
+    <input type="text" class="form-control" id="exampleFormControlInput1" name="title">
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlInput2">价格</label>
+    <input type="text" class="form-control" id="exampleFormControlInput1" name="price">
+  </div>  <div class="form-group">
+    <label for="exampleFormControlInput3">出版日期</label>
+    <input type="date" class="form-control" id="exampleFormControlInput3" name="publish_date">
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlSelect1">出版社</label>
+    <select class="form-control" id="exampleFormControlSelect1" name="publish">
+        {% for publish_obj in publish_objs %}
+            <option value="{{ publish_obj.id }}">{{ publish_obj.name }}</option>
+        {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlSelect2">作者</label>
+    <select class="form-control" id="exampleFormControlSelect1" name="author">
+        {% for author_obj in author_objs %}
+            <option value="{{ author_obj.id }}">{{ author_obj.name }}</option>
+        {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-primary" formmethod="post">保存</button>
+</form>
+{% endblock %}

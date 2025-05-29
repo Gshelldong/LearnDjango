@@ -1,0 +1,28 @@
+{% extends 'home.html' %}
+
+{% block content %}
+<table class="table table-hover table-bordered table-striped">
+  <thead>
+    <tr class="text-center">
+      <th scope="col">ID</th>
+      <th scope="col">姓名</th>
+      <th scope="col">年龄</th>
+      <th scope="col">电话</th>
+      <th scope="col">地址</th>
+      <th scope="col">操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for author in user_allset %}
+        <tr>
+          <td>{{ author.id }}</td>
+          <td>{{ author.name }}</td>
+          <td>{{ author.age }}</td>
+          <td>{{ author.author_detail.phone }}</td>
+          <td>{{ author.author_detail.addr }}</td>
+          <td class="text-center"><span class="btn btn-primary btn-sm">编辑</span><span class="btn btn-danger btn-sm" style="margin-left: 10px">删除</span></td>
+        </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
