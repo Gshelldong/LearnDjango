@@ -1,7 +1,7 @@
 {% extends 'home.html' %}
 
 {% block title %}
-<h5 class="card-header text-white bg-primary">图书列表<i class="fa-solid fa-book float-right"></i></h5>
+<h5 class="card-header text-white bg-primary">搜索结果<i class="fa-solid fa-book float-right"></i></h5>
 {% endblock %}
 
 
@@ -20,7 +20,9 @@
     </tr>
   </thead>
   <tbody>
-    {% for book in book_allset %}
+  {% if book_objs|length %}
+
+      {% for book in book_objs %}
         <tr>
           <th scope="row">{{ forloop.counter }}</th>
           <td>{{ book.title }}</td>
@@ -42,6 +44,15 @@
           </td>
         </tr>
     {% endfor %}
+
+      {% else %}
+      <tr>
+          <th colspan="7">
+              <h5 class="text-center" >没有收录相关书籍!</h5>
+          </th>
+      </tr>
+  {% endif %}
+
   </tbody>
 </table>
 

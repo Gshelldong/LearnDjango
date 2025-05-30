@@ -20,9 +20,19 @@ from app01 import views as app01_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path('^$', app01_views.home, name='app01_views'),
+
+    # 书籍相关
     path('listbook/', app01_views.list_book, name='listbook'),
     path('addbook/', app01_views.add_book, name='addbook'),
-    path('user/', app01_views.user, name='user'),
     re_path('^edit_book/(?P<edit_id>\d+)', app01_views.edit_book, name='edit'),
     re_path('^delete_book/(?P<delete_id>\d+)', app01_views.delete_book, name='delete'),
+
+    # 用户相关
+    path('user/', app01_views.user, name='user'),
+
+    # 出版社相关
+    path('publish/', app01_views.publish, name='publish'),
+
+
+    path('search/', app01_views.search, name='search'),
 ]

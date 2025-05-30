@@ -16,6 +16,10 @@ def user(request):
     user_allset = models.Author.objects.all()
     return render(request, 'author.html', locals())
 
+def publish(request):
+    publish_allset = models.Publish.objects.all()
+    return render(request, 'publish.html', locals())
+
 def add_book(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -33,11 +37,22 @@ def add_book(request):
     return render(request,'addbook.html', locals())
 
 def edit_book(request, edit_id):
-    book = models.Book.objects.filter(pk=edit_id).first() # type: models.Book
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        price = request.POST.get('price')
+        publish_date = request.POST.get('publish_date')
+        publish = request.POST.get('publish')
+        author_ids = request.POST.getlist('author')
 
+        models.Book.objects.filter(pk=edit_id).update(title=title, price=price, publish_date= publish_date, publish=publish)
+        book_obj = models.Book.objects.filter(pk=edit_id).first() # type: models.Book
+        book_obj.authors.set(author_ids)
+
+        return redirect(reverse('listbook'))
+
+    book = models.Book.objects.filter(pk=edit_id).first() # type: models.Book
     author_objs = models.Author.objects.all()
     publish_objs = models.Publish.objects.all()
-
     return render(request,'edit_book.html',locals())
 
 def delete_book(request, delete_id):
@@ -50,3 +65,11 @@ def delete_book(request, delete_id):
     models.Book.objects.filter(pk=delete_id).delete()
     return redirect(reverse('listbook'))
     # 2.不直接删  给用户再次确认一次 问他是否真的要删
+
+def search(request):
+    search_title = request.GET.get('title')
+    book_objs = models.Book.objects.filter(title__icontains=search_title).all()
+
+    return render(request, 'search_book.html', locals())
+
+

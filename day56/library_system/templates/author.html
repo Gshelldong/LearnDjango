@@ -1,6 +1,11 @@
 {% extends 'home.html' %}
 
+{% block title %}
+<h5 class="card-header text-white bg-primary">作者管理<i class="fa-sharp fa-solid fa-user float-right"></i></h5>
+{% endblock %}
+
 {% block content %}
+<a href="{% url 'addbook' %}" class="btn btn-success" role="button">添加作者</a><hr>
 <table class="table table-hover table-bordered table-striped">
   <thead>
     <tr class="text-center">

@@ -1,0 +1,34 @@
+{% extends 'home.html' %}
+
+{% block title %}
+<h5 class="card-header text-white bg-primary">出版社管理<i class="fa-sharp fa-solid fa-book float-right"></i></h5>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'addbook' %}" class="btn btn-success" role="button">添加出版社</a><hr>
+<table class="table table-hover table-bordered table-striped">
+  <thead>
+    <tr class="text-center">
+      <th scope="col">序号</th>
+      <th scope="col">名字</th>
+      <th scope="col">地址</th>
+      <th scope="col">邮箱</th>
+      <th scope="col">操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for publish_obj in publish_allset %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ publish_obj.name }}</td>
+          <td>{{ publish_obj.addr }}</td>
+          <td>{{ publish_obj.email }}</td>
+          <td class="text-center">
+              <a class="btn btn-primary btn-sm">编辑</a>
+              <a class="btn btn-danger btn-sm" style="margin-left: 10px">删除</a>
+          </td>
+        </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

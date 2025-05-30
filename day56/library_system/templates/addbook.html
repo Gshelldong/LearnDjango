@@ -23,7 +23,7 @@
   </div>
   <div class="form-group">
     <label for="exampleFormControlSelect2">作者</label>
-    <select class="form-control" id="exampleFormControlSelect1" name="author">
+    <select class="form-control" id="exampleFormControlSelect1" name="author" multiple>
         {% for author_obj in author_objs %}
             <option value="{{ author_obj.id }}">{{ author_obj.name }}</option>
         {% endfor %}

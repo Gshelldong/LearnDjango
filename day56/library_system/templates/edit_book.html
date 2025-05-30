@@ -1,5 +1,9 @@
 {% extends 'home.html' %}
 
+{% block title %}
+<h5 class="card-header text-white bg-primary">编辑书籍<i class="fa-sharp fa-solid fa-book float-right"></i></h5>
+{% endblock %}
+
 {% block content %}
 <form>
   <div class="form-group">
@@ -31,8 +35,9 @@
         {% for author_obj in author_objs %}
             {% if author_obj in book.authors.all %}
                 <option value="{{ author_obj.id }}" selected>{{ author_obj.name }}</option>
+                {% else %}
+                <option value="{{ author_obj.id }}">{{ author_obj.name }}</option>
             {% endif %}
-            <option value="{{ author_obj.id }}">{{ author_obj.name }}</option>
         {% endfor %}
     </select>
   </div>
