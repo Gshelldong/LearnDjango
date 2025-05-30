@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-<a href="{% url 'addbook' %}" class="btn btn-success" role="button">添加作者</a><hr>
+<a href="{% url 'adduser' %}" class="btn btn-success" role="button">添加作者</a><hr>
 <table class="table table-hover table-bordered table-striped">
   <thead>
     <tr class="text-center">
@@ -25,7 +25,10 @@
           <td>{{ author.age }}</td>
           <td>{{ author.author_detail.phone }}</td>
           <td>{{ author.author_detail.addr }}</td>
-          <td class="text-center"><span class="btn btn-primary btn-sm">编辑</span><span class="btn btn-danger btn-sm" style="margin-left: 10px">删除</span></td>
+          <td class="text-center">
+              <a href="{% url 'edituser' author.id %}" class="btn btn-primary btn-sm">编辑</a>
+              <a href="{% url 'edituser' author.id %}" class="btn btn-danger btn-sm" style="margin-left: 10px">删除</a>
+          </td>
         </tr>
     {% endfor %}
   </tbody>

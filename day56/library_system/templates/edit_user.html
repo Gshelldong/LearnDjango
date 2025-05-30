@@ -1,0 +1,27 @@
+{% extends 'home.html' %}
+
+{% block title %}
+<h5 class="card-header text-white bg-primary">编辑作者<i class="fa-sharp fa-solid fa-user float-right"></i></h5>
+{% endblock %}
+
+{% block content %}
+<form>
+  <div class="form-group">
+    <label for="exampleFormControlInput1">姓名</label>
+    <input type="text" class="form-control" id="exampleFormControlInput1" name="name" value="{{ author.name }}">
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlInput2">年龄</label>
+    <input type="text" class="form-control" id="exampleFormControlInput1" name="age" value="{{ author.age }}">
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlInput3">电话</label>
+    <input type="text" class="form-control" id="exampleFormControlInput1" name="phone" value="{{ author.author_detail.phone }}">
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlInput4">地址</label>
+    <input type="text" class="form-control" id="exampleFormControlInput1" name="addr" value="{{ author.author_detail.addr }}">
+  </div>
+  <button type="submit" class="btn btn-primary" formmethod="post">保存</button>
+</form>
+{% endblock %}

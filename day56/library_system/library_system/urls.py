@@ -29,6 +29,8 @@ urlpatterns = [
 
     # 用户相关
     path('user/', app01_views.user, name='user'),
+    path('add_user/', app01_views.adduser, name='adduser'),
+    re_path('^edit_user/(?P<edit_id>\d+)', app01_views.edit_user, name='edituser'),
 
     # 出版社相关
     path('publish/', app01_views.publish, name='publish'),

@@ -1,0 +1,23 @@
+{% extends 'home.html' %}
+
+{% block content %}
+<form>
+  <div class="form-group">
+    <label for="exampleFormControlInput1">姓名</label>
+    <input type="text" class="form-control" id="exampleFormControlInput1" name="name">
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlInput2">年龄</label>
+    <input type="text" class="form-control" id="exampleFormControlInput1" name="age">
+  </div>  <div class="form-group">
+  <div class="form-group">
+    <label for="exampleFormControlInput3">电话</label>
+    <input type="text" class="form-control" id="exampleFormControlInput3" name="phone">
+  </div>
+  </div>
+    <label for="exampleFormControlInput4">地址</label>
+    <input type="text" class="form-control" id="exampleFormControlInput4" name="addr">
+  </div>
+  <button type="submit" class="btn btn-primary btn-group-sm" formmethod="post">保存</button>
+</form>
+{% endblock %}

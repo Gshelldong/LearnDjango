@@ -16,6 +16,40 @@ def user(request):
     user_allset = models.Author.objects.all()
     return render(request, 'author.html', locals())
 
+def adduser(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        age = request.POST.get('age')
+        phone = request.POST.get('phone')
+        addr = request.POST.get('addr')
+        # 添加作者
+        author_summary = models.AuthorDetail.objects.create(phone=phone, addr=addr)
+        models.Author.objects.create(name=name, age=age, author_detail=author_summary)
+
+        return redirect(reverse('user'))
+
+    return render(request,'adduser.html',locals())
+
+def edit_user(request, edit_id):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        age = request.POST.get('age')
+        phone = request.POST.get('phone')
+        addr = request.POST.get('addr')
+
+        models.Author.objects.filter(pk=edit_id).update(name=name, age=age)
+        author_obj = models.Author.objects.filter(pk=edit_id).first() # type: models.Author
+        author_obj_detail = author_obj.author_detail
+        author_obj_detail.addr = addr
+        author_obj_detail.phone = phone
+        author_obj_detail.save()
+
+        return redirect(reverse('user'))
+
+    author = models.Author.objects.filter(pk=edit_id).first()
+    return render(request,'edit_user.html',locals())
+
+
 def publish(request):
     publish_allset = models.Publish.objects.all()
     return render(request, 'publish.html', locals())
