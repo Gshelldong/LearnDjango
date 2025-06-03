@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>计算器</title>
+  <script src="{% static 'jquery.min.js' %}"></script>
+</head>
+<body>
+<input type="text" id="i1">+<input type="text"id="i2">=<input type="text" id="i3">
+<button id="b1" class="btn">求和</button>
+
+<script>
+        $('#b1').on('click',function () {
+        alert(123)
+        // 点击按钮 朝后端发送post请求
+        $.ajax({
+            url:'',  // 控制发送给谁 不写就是朝当前地址提交
+            type:'post',  // 发送方式是post请求
+            data:{'i1':$('#i1').val(),'i2':$('#i2').val()},  // 发送的数据
+            success:function (data) {  // data形参用来接收异步提交的结果
+                alert(data)
+                // 将后端计算好的结果 通过DOM操作 渲染到第三个input矿中
+                $('#i3').val(data)
+            }
+        })
+        })
+</script>
+</body>
+</html>

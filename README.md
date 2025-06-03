@@ -40,7 +40,22 @@
 
 传递给前端页面   >>>    页面渲染
 
+## MTV与MVC模型
 
+django框架自称为是MTV框架
+
+> M:models
+> T:templates
+> V:views 
+
+MVC
+
+> M:models
+> V:views
+> C:controller 控制器(urls)
+
+
+本质:MTV其实也是MVC
 
 ## jinja2
 
@@ -439,17 +454,33 @@ class MyChar(models.Field):
 
 #### choice字段
 
-
+比如性别字段在数据库中存储不会直接存储男或者女而是使用数字来代替，在orm中可以使用choice字段声明。orm在查询的时候使用内置方法直接进行映射关系的查询。实际上只是代码中的声明，在数据库中并不会限制字段的值。
 
 ```python
 # 如果没有对应关系的字段，就会直接打印原来的值
+class User(models.Model):
+    username = models.CharField(max_length=32)
+    age = models.IntegerField()
+    choice = [
+        (1,'男'),
+        (2,'女'),
+        (3,'其它'),
+    ]
+    gender = models.IntegerField(choices=choice)
+
+# 数据库中表的定义
+CREATE TABLE `app01_user` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `username` varchar(32) NOT NULL,
+  `age` int(11) NOT NULL,
+  `gender` int(11) NOT NULL, # 没有限制只能选择哪些值
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+# 查询的结果
+res = models.User.objects.filter(pk=1).first() # type: models.User
+print(res.get_gender_display()) # -> 男
 ```
-
-
-
-
-
-
 
 
 
@@ -2012,6 +2043,55 @@ with transaction.atomic():
     在该代码块中书写的操作同属于一个事务
     """
 print('出了代码块事务就结束')
+```
+
+## AJAX
+
+它可以异步地向服务器发送请求，在等待响应的过程中，不会阻塞当前页面，在这种情况下，浏览器可以做自己的事情。直到成功获取响应后，浏览器才开始处理响应数据。
+
+### 计算器实例
+
+在不刷新网页的情况下点击计算，通过ajax发送请求到服务端，并填充在相应的格子中。
+
+![image-20250603174032559](images\image-20250603174032559.png)
+
+```html
+<body>
+<input type="text" id="i1">+<input type="text"id="i2">=<input type="text" id="i3">
+<button id="b1" class="btn">求和</button>
+
+<script>
+        // 给按钮绑定事件
+        $('#b1').on('click',function () {
+        alert(123)
+        // 点击按钮朝后端发送post请求
+        $.ajax({
+            url:'',  // 控制发送给谁 不写就是朝当前地址提交
+            type:'post',  // 发送方式是post请求
+            data:{'i1':$('#i1').val(),'i2':$('#i2').val()},  // 发送的数据
+            success:function (data) {  // data形参用来接收异步提交的结果
+                alert(data)
+                // 将后端计算好的结果 通过DOM操作 渲染到第三个input矿中
+                $('#i3').val(data)
+            }
+        })
+        })
+</script>
+</body>
+```
+
+后端代码
+
+```python
+def index(request):
+    if request.is_ajax():
+        if request.method == 'POST':
+            v1 = request.POST.get('i1')
+            v2 = request.POST.get('i2')
+            v3 = int(v1) + int(v2)
+
+            return HttpResponse(v3)
+    return render(request,'index.html')
 ```
 
 
