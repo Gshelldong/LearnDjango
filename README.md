@@ -437,6 +437,20 @@ class MyChar(models.Field):
         return  'char(%s)'%self.max_length
 ```
 
+#### choice字段
+
+
+
+```python
+# 如果没有对应关系的字段，就会直接打印原来的值
+```
+
+
+
+
+
+
+
 
 
 **需要执行数据库迁移(同步)命令**,只要修改了模型就必须这样修改。
