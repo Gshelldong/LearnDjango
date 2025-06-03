@@ -10,7 +10,7 @@ def list_book(request):
     book_allset = models.Book.objects.all()
     # authors = book_allset.authors.all()
     # print(authors)
-    return render(request, 'list_book.html', locals())
+    return render(request, 'list_book1.html', locals())
 
 def user(request):
     user_allset = models.Author.objects.all()

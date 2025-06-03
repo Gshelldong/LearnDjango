@@ -59,14 +59,14 @@
                     管理面板
                   </a>
                   <a href="/" class="list-group-item list-group-item-action">首页</a>
-                  <a href="{% url 'listbook' %}" class="list-group-item list-group-item-action">书籍管理</a>
+                  <button class="list-group-item list-group-item-action" id="booklist">书籍管理</button>
                   <a href="{% url 'user' %}" class="list-group-item list-group-item-action">作者管理</a>
                   <a href="{% url 'publish' %}" class="list-group-item list-group-item-action">出版社管理</a>
                   <a href="#" class="list-group-item list-group-item-action">系统管理</a>
                 </div>
             </div>
             <div class="col-md-9">
-                <div class="card">
+                <div class="card" id="card_id">
                     {% block title %}
                     <h5 class="card-header text-white bg-primary">欢迎使用<i class="fa-sharp fa-solid fa-house float-right"></i></h5>
                     {% endblock %}
@@ -85,5 +85,22 @@
             </div>
         </div>
     </div>
+    <script>
+                // 给按钮绑定事件
+        $('#booklist').on('click',function () {
+        alert('123')
+        // 点击按钮朝后端发送post请求
+        $.ajax({
+            url:'{% url "listbook" %}',  // 控制发送给谁 不写就是朝当前地址提交
+            type:'get',  // 发送方式是post请求
+            data:'',  // 发送的数据
+            success:function (data) {  // data形参用来接收异步提交的结果
+                alert(data)
+                // 将后端计算好的结果 通过DOM操作 渲染到第三个input矿中
+                $('#card_id').html(data)
+            }
+        })
+        })
+    </script>
 </body>
 </html>
