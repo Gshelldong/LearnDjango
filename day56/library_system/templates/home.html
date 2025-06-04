@@ -66,11 +66,11 @@
                 </div>
             </div>
             <div class="col-md-9">
-                <div class="card" id="card_id">
+                <div class="card">
                     {% block title %}
                     <h5 class="card-header text-white bg-primary">欢迎使用<i class="fa-sharp fa-solid fa-house float-right"></i></h5>
                     {% endblock %}
-                  <div class="card-body">
+                  <div class="card-body" id="card_id">
                       {% block content %}
                       <div class="jumbotron">
                           <h1 class="display-4">欢迎使用最牛逼的图书管理系统</h1>
@@ -88,14 +88,14 @@
     <script>
                 // 给按钮绑定事件
         $('#booklist').on('click',function () {
-        alert('123')
+        {#alert('123')#}
         // 点击按钮朝后端发送post请求
         $.ajax({
             url:'{% url "listbook" %}',  // 控制发送给谁 不写就是朝当前地址提交
             type:'get',  // 发送方式是post请求
             data:'',  // 发送的数据
             success:function (data) {  // data形参用来接收异步提交的结果
-                alert(data)
+                {#alert(data)#}
                 // 将后端计算好的结果 通过DOM操作 渲染到第三个input矿中
                 $('#card_id').html(data)
             }
