@@ -11,3 +11,8 @@ def index(request):
             return HttpResponse(v3)
 
     return render(request,'index.html')
+
+def form(request):
+    print(request.POST)
+    print(request.FILES)
+    return render(request, 'form.html')

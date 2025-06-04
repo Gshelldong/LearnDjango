@@ -2094,5 +2094,48 @@ def index(request):
     return render(request,'index.html')
 ```
 
+contentType前后端传输数据编码格式，前后端传输数据编码格式。
+
+1. urlencoded
+2. formdata
+3. json
+
+### form表单
+默认使用的编码格式是urlencoded，数据格式:name=jason&pwd=123，django后端针对urlencoded编码格式的数据会自动解析并放到request.POST中供用户获取。
+
+可以修改为formdata传文件django后端针对只要是符合urlencoded编码格式的数据(name=jason&pwd=123)都会自动解析并放到request.POST中供用户获取如果是文件只要你指定的编码是formdata就会自动解析并放到request.FILES中。
+
+总结:前后端传输数据的时候一定要保证数据格式和你的编码格式是一致的不能骗人家!!!
+
+```python
+# 不能够识别文件，只能把文件名通过kv的方式传递后后端
+<form action="" method="post" enctype="application/x-www-form-urlencoded">
+    <p>username: <input type="text" name="name"></p>
+    <p>password: <input type="password" name="password"></p>
+    <p><input type="file" name="myfile"></p>
+    <p><input type="submit"></p>
+</form>
+
+
+# 后端可以使用request.FILES解析到文件，正常的input值，后端可以直接收到
+<form action="" method="post" enctype="multipart/form-data">
+    <p>username: <input type="text" name="name"></p>
+    <p>password: <input type="password" name="password"></p>
+    <p><input type="file" name="myfile"></p>
+    <p><input type="submit"></p>
+</form>
+```
+
+### ajax提交数据
+
+ajax默认数据提交方式也是urlencoded
+
+ajax发送json格式数据，django后端针对json格式的数据并不会自动解析放到`request.POST`或者`request.FILES`里面它并不会解析json格式数据而是将它原封不动的放在`request.body`中。
+
+使用jquery类型的ajax提交POST请求。
+
+```python
+```
+
 
 
