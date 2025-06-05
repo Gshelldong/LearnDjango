@@ -1,4 +1,6 @@
 from django.shortcuts import render,HttpResponse
+from django.core import serializers
+from app01 import models
 
 # Create your views here.
 def index(request):
@@ -13,6 +15,23 @@ def index(request):
     return render(request,'index.html')
 
 def form(request):
-    print(request.POST)
-    print(request.FILES)
+    if request.is_ajax():
+        if request.method == 'POST':
+            print(request.POST)
+            print(request.FILES)
+            return HttpResponse('收到了')
     return render(request, 'form.html')
+
+
+def test(request):
+    print(request.body)
+    print(request.content_type)
+
+    return render(request, 'test.html')
+
+
+def listbook(request):
+    books = models.Book.objects.all()
+    res = serializers.serialize('json', books)
+    return render(request, 'listbook.html', locals())
+

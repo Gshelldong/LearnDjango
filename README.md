@@ -2135,7 +2135,102 @@ ajax发送json格式数据，django后端针对json格式的数据并不会自�
 使用jquery类型的ajax提交POST请求。
 
 ```python
+<button class="btn btn-primary" id="b1">发送ajax post</button>
+
+<script>
+      $('#b1').on('click',function () {
+          alert(123)
+          // 点击按钮 朝后端发送post请求
+          $.ajax({
+              url:'',  // 控制发送给谁 不写就是朝当前地址提交
+              type:'post',  // 发送方式是post请求
+              data:JSON.stringify({'username':'jason','password':123}),  // 发送的数据
+              contentType:'application/json',  // 告诉后端你这次的数据是json格式
+              success:function (data) {  // data形参用来接收异步提交的结果
+                  alert(data)
+                  // 将后端计算好的结果 通过DOM操作 渲染到第三个input矿中
+                  $('#i3').val(data)
+              }
+          })
+      })
+    
+# 后端接收到的信息
+def test(request):
+    print(request.body)
+    print(request.content_type)
+
+# ->    
+b'{"username":"jason","password":123}'
+application/json
 ```
 
+### ajax传输文件
 
+和form表单差不多，在设置了传输的类型是`fromData`之后，后端可以接收到request.POST的信息和request.FILES的文件信息。
+
+![](images\image-20250605-1.png)
+
+```python
+<form action="">
+    <p><input type="file" name="myfile" id="d1"></p>
+    <button type="button" class="" id="b1">发送文件</button>
+</form>
+
+<p>MESSAGE: <input type="text" id="i3"></p>
+
+<script>
+$('#b1').on('click',function () {
+	// ajax传输文件 建议使用内置对象formdata
+	var formData = new FormData();  // 既可以传普通的键值对也可以传文件
+	// 添加普通键值
+	formData.append('username','jason');
+	formData.append('password','123');
+	// 传文件
+	// 如何获取文件标签所存储的文件对象?  固定语法
+	// 1.先用jQery查找到存储文件的input标签
+	// 2.将jQuery对象转成原生js对象
+	// 3.利用原生js对象的方法 .files[0]获取到标签内部存储的文件对象
+	// 4.一定要指定两个参数都为false
+	formData.append('my_file',$('#d1')[0].files[0]);
+	$.ajax({
+		url:'',  // 控制发送给谁 不写就是朝当前地址提交
+		type: 'post',  // 发送方式是post请求
+		data: formData, // 发送的数据
+
+		// ajax发送文件需要指定两个额外的参数
+		processData:false,  // 告诉前端不要处理数据
+		contentType:false,  // 不适用任何编码  因为formdata对象自身自带编码 django后端也能够识别formdata对象
+
+		success:function (data) {  // data形参用来接收异步提交的结果
+			alert(data)
+			// 将后端计算好的结果 通过DOM操作 渲染到第三个input矿中
+			$('#i3').val(data)
+		}
+	})
+})
+</script>
+
+# 后端接收到的数据
+def form(request):
+    if request.is_ajax():
+        if request.method == 'POST':
+            print(request.POST)
+            print(request.FILES)
+            return HttpResponse('收到了')
+    return render(request, 'form.html')
+# ---res---
+<QueryDict: {'username': ['jason'], 'password': ['123']}>
+<MultiValueDict: {'my_file': [<InMemoryUploadedFile: 2.png (image/png)>]}>
+```
+
+### django序列化组件serializers
+
+```python
+from django.core import serializers
+
+def listbook(request):
+    books = models.Book.objects.all()
+    res = serializers.serialize('json', books)
+    return render(request, 'listbook.html', locals())
+```
 

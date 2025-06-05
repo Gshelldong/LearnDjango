@@ -1,15 +1,49 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>form</title>
+      <script src="{% static 'jquery.min.js' %}"></script>
 </head>
 <body>
-<form action="" method="post" enctype="multipart/form-data">
-    <p>username: <input type="text" name="name"></p>
-    <p>password: <input type="password" name="password"></p>
-    <p><input type="file" name="myfile"></p>
-    <p><input type="submit"></p>
+<form action="">
+    <p><input type="file" name="myfile" id="d1"></p>
+    <button type="button" class="" id="b1">发送文件</button>
 </form>
+
+<p>MESSAGE: <input type="text" id="i3"></p>
+
+<script>
+$('#b1').on('click',function () {
+	// ajax传输文件 建议使用内置对象formdata
+	var formData = new FormData();  // 既可以传普通的键值对也可以传文件
+	// 添加普通键值
+	formData.append('username','jason');
+	formData.append('password','123');
+	// 传文件
+	// 如何获取文件标签所存储的文件对象?  固定语法
+	// 1.先用jQery查找到存储文件的input标签
+	// 2.将jQuery对象转成原生js对象
+	// 3.利用原生js对象的方法 .files[0]获取到标签内部存储的文件对象
+	// 4.一定要指定两个参数都为false
+	formData.append('my_file',$('#d1')[0].files[0]);
+	$.ajax({
+		url:'',  // 控制发送给谁 不写就是朝当前地址提交
+		type: 'post',  // 发送方式是post请求
+		data: formData, // 发送的数据
+
+		// ajax发送文件需要指定两个额外的参数
+		processData:false,  // 告诉前端不要处理数据
+		contentType:false,  // 不适用任何编码  因为formdata对象自身自带编码 django后端也能够识别formdata对象
+
+		success:function (data) {  // data形参用来接收异步提交的结果
+			alert(data)
+			// 将后端计算好的结果 通过DOM操作 渲染到第三个input矿中
+			$('#i3').val(data)
+		}
+	})
+})
+</script>
 </body>
 </html>
