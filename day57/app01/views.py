@@ -1,4 +1,5 @@
 from django.shortcuts import render,HttpResponse
+from django.http import JsonResponse
 from django.core import serializers
 from app01 import models
 
@@ -31,7 +32,16 @@ def test(request):
 
 
 def listbook(request):
+    if request.is_ajax():
+        if request.method == 'POST':
+            back_dic = {'code': 100, 'msg': ''}
+            book_id = request.POST.get('id')
+            print(book_id)
+            models.Book.objects.filter(pk=book_id).delete()
+            back_dic['msg'] = '真的删除了!'
+
+            return JsonResponse(back_dic)
     books = models.Book.objects.all()
-    res = serializers.serialize('json', books)
+    # res = serializers.serialize('json', books)
     return render(request, 'listbook.html', locals())
 

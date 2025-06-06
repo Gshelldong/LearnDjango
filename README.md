@@ -338,13 +338,13 @@ def login(request):
 ```
 
 ### 获取前端数据
-request.method 获取请求方法
+`request.method`获取请求方法
 
 对数据的处理不单单只有wsgiref模块django后端也进行了大量的数据处理
 
 在视图函数中request有wsgiref和django的处理，要查看request携带的详细信息，可以通过IDE debug的方式查看
 
-GET
+**GET**
 
 ```python
 # 获取前端get提交的数据(就类似于是一个大字典)
@@ -359,7 +359,8 @@ request.GET
     	request.GET.getlist('hobby')
 ```
 
-POST
+**POST**
+
 ```python
 # 获取前端post提交的数据(就类似于是一个大字典)
 request.POST 
@@ -631,6 +632,21 @@ django orm中表与表之间建关系。
 注意:
 前面两个关键字会自动再字段后面加_id
 最后一个关键字 并不会产生实际字段 只是告诉django orm自动创建第三张表。
+
+### 批量插入数据
+
+```python
+bulk_create()  批量插入数据
+
+# for i in range(1000):
+#     models.Book.objects.create(title='第%s本书'%i)
+# 上面这种方式 效率极低
+
+l = []
+for i in range(10000):
+	l.append(models.Book(title='第%s本书'%i))
+models.Book.objects.bulk_create(l)  # 批量插入数据
+```
 
 ## 路由层urls.py
 
@@ -2233,4 +2249,72 @@ def listbook(request):
     res = serializers.serialize('json', books)
     return render(request, 'listbook.html', locals())
 ```
+
+删除提示的组件，每个版本的实际写法不一致。
+
+```html
+<script>
+// 绑定按钮
+$('.btn-del').click(function (){
+Swal.fire({
+  title: 'Are you sure?',
+  text: "You won't be able to revert this!",
+  icon: 'warning',
+  showCancelButton: true,
+  confirmButtonColor: '#3085d6',
+  cancelButtonColor: '#d33',
+  confirmButtonText: 'Yes, delete it!'
+}).then((result) => {
+  if (result.value) {
+    // 显示加载状态
+    Swal.fire({
+      title: 'Processing...',
+      html: 'Deleting your file...',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // 获取要删除的 ID（假设你有一个变量存储 ID）
+    var $btnEle = $(this); // 替换为你的实际 ID 获取方式
+    var bookId = $btnEle.attr('book_id');
+
+    // 发送 POST 请求到删除 API
+    $.ajax({
+      url: '', // 替换为你的实际 API 地址
+      type: 'POST',
+      data: {
+        id: bookId,
+      },
+      // dataType: 'json',
+      success: function(response) {
+        // 请求成功处理
+        Swal.fire(
+          'Deleted!',
+          'Your file has been deleted.',
+          'success'
+        ).then(() => {
+          // 刷新页面或移除被删除的元素
+          // 例如：$('#item-' + itemId).remove();
+            $btnEle.parent().parent().remove();
+        });
+      },
+      error: function(xhr, status, error) {
+        // 请求失败处理
+        Swal.fire(
+          'Error',
+          'Failed to delete: ' + xhr.responseText,
+          'error'
+        );
+      }
+    });
+  }
+})
+    });
+</script>
+```
+
+## 自定义分页器
 
