@@ -2318,3 +2318,13 @@ Swal.fire({
 
 ## 自定义分页器
 
+```python
+```
+
+
+
+## UI
+
+- Layui
+- AdminLTE
+- tailwandcss

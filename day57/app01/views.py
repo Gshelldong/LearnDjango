@@ -2,6 +2,7 @@ from django.shortcuts import render,HttpResponse
 from django.http import JsonResponse
 from django.core import serializers
 from app01 import models
+from app01.utils.mypage import Pagination
 
 # Create your views here.
 def index(request):
@@ -36,12 +37,20 @@ def listbook(request):
         if request.method == 'POST':
             back_dic = {'code': 100, 'msg': ''}
             book_id = request.POST.get('id')
-            print(book_id)
             models.Book.objects.filter(pk=book_id).delete()
             back_dic['msg'] = '真的删除了!'
 
             return JsonResponse(back_dic)
     books = models.Book.objects.all()
     # res = serializers.serialize('json', books)
+    all_count = books.count()
+    current_page = request.GET.get('page',1)
+
+    pagenaebar = Pagination(current_page,all_count,per_page_num=10, pager_count=9)
+    page_data = books[pagenaebar.start:pagenaebar.end]
+    page_html = pagenaebar.page_html()
+
+
+
     return render(request, 'listbook.html', locals())
 

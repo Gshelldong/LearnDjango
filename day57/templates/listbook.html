@@ -19,7 +19,7 @@
         <table class="table table-bordered active table-hover">
       <thead>
         <tr>
-          <th>序号</th>
+          <th>ID</th>
           <th>名称</th>
           <th>价格</th>
           <th>作者</th>
@@ -28,9 +28,9 @@
         </tr>
       </thead>
       <tbody>
-      {% for book in books %}
+      {% for book in page_data %}
         <tr>
-          <th scope="row">{{ forloop.counter }}</th>
+          <th scope="row">{{ book.id }}</th>
           <td>{{ book.name }}</td>
           <td>{{ book.price }}</td>
           <td>{{ book.author }}</td>
@@ -42,6 +42,7 @@
         </tr>
       {% endfor %}
     </table>
+  {{ page_html | safe }}
   </div>
 </div>
 </div>
@@ -59,8 +60,8 @@ Swal.fire({
   if (result.value) {
     // 显示加载状态
     Swal.fire({
-      title: 'Processing...',
-      html: 'Deleting your file...',
+      title: '删除',
+      html: '正在删除数据...',
       allowOutsideClick: false,
       showConfirmButton: false,
       willOpen: () => {
