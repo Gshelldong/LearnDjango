@@ -502,6 +502,92 @@ python3 manage.py migrate
 
 ![image-20250411144434048](images/image-20250411144434048.png)
 
+### 多对多创建的三种方式
+
+#### 1.全自动
+
+**推荐使用**
+
+- 优势：不需要手动创建第三张表。
+- 不足：由于第三张表不是你手动创建的，也就意味着第三张表字段是固定的无法扩展。
+
+```python
+class Book(models.Model):
+    title = models.CharField(max_length=100)
+    authors = models.ManyToManyField(to='Author')
+    publication_date = models.DateField()
+    def __str__(self):
+        return self.title
+
+class Author(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    def __str__(self):
+        return self.name
+```
+
+#### 2.纯手动(了解)
+
+自己创建第三张表。
+
+优势：第三张表可以扩展任意字段。
+
+不足：ORM查询不方便。
+
+```python
+class Book(models.Model):
+	title = models.CharField(max_length=32)
+	price = models.DecimalField(max_digits=8,decimal_places=2)
+
+class Author(models.Model):
+	name = models.CharField(max_length=32)
+
+class Book2Author(models.Model):
+	book = models.ForeignKey(to='Book')
+	author = models.ForeignKey(to='Author')
+	create_time = models.DateField(auto_now_add=True)
+```
+
+#### 3.半自动(推荐使用)
+
+优势:结合了全自动和纯手动的两个优点
+
+不足：不支持多对多内置方法的查询。
+
+- add
+- set
+- remove
+- clear
+
+```python
+class Book(models.Model):
+    title = models.CharField(max_length=100)
+    authors = models.ManyToManyField(to='Author', through='BooktoAuthor', through_fields=('book', 'author'))
+    publication_date = models.DateField()
+    def __str__(self):
+        return self.title
+
+class Author(models.Model):
+    name = models.CharField(max_length=100)
+    books = models.ManyToManyField(to='Book', through='BooktoAuthor', through_fields=('author', 'book'))
+    # through 告诉django orm书籍表和作者表的多对多关系是通过BooktoAuthor来记录的
+    # through_fields 告诉django orm记录关系时用过BooktoAuthor表中的book字段和author字段来记录的
+    email = models.EmailField()
+    def __str__(self):
+        return self.name
+
+class BooktoAuthor(models.Model):
+    book = models.ForeignKey(to='Book',on_delete=models.CASCADE)
+    author = models.ForeignKey(to='Author',on_delete=models.CASCADE)
+    create_time = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f'{self.book.title} - {self.author.name}'
+```
+
+
+
+
+
 ### 表字段的增删改查
 
 **注意:只要动了models中跟数据库相关的代码 就必须重新执行上面的两条命令缺一不可**
@@ -2318,7 +2404,334 @@ Swal.fire({
 
 ## 自定义分页器
 
+主要的的思路就是从前端获取到page_num,后端控制orm查询从page_num到第几页，生成相应的翻页标签之后再到前端进行渲染。
+
+django也有自带的分页器。
+
 ```python
+class Pagination(object):
+    def __init__(self, current_page, all_count, per_page_num=2, pager_count=11):
+        """
+        封装分页相关数据
+        :param current_page: 当前页
+        :param all_count:    数据库中的数据总条数
+        :param per_page_num: 每页显示的数据条数
+        :param pager_count:  最多显示的页码个数
+
+        用法:
+        queryset = model.objects.all()
+        page_obj = Pagination(current_page,all_count)
+        page_data = queryset[page_obj.start:page_obj.end]
+        获取数据用page_data而不再使用原始的queryset
+        获取前端分页样式用page_obj.page_html
+        """
+        try:
+            current_page = int(current_page)
+        except Exception as e:
+            current_page = 1
+
+        if current_page < 1:
+            current_page = 1
+
+        self.current_page = current_page
+
+        self.all_count = all_count
+        self.per_page_num = per_page_num
+
+        # 总页码
+        all_pager, tmp = divmod(all_count, per_page_num)
+        if tmp:
+            all_pager += 1
+        self.all_pager = all_pager
+
+        self.pager_count = pager_count
+        self.pager_count_half = int((pager_count - 1) / 2)
+
+    @property
+    def start(self):
+        return (self.current_page - 1) * self.per_page_num
+
+    @property
+    def end(self):
+        return self.current_page * self.per_page_num
+
+    def page_html(self):
+        # 如果总页码 < 11个：
+        if self.all_pager <= self.pager_count:
+            pager_start = 1
+            pager_end = self.all_pager + 1
+        # 总页码  > 11
+        else:
+            # 当前页如果<=页面上最多显示11/2个页码
+            if self.current_page <= self.pager_count_half:
+                pager_start = 1
+                pager_end = self.pager_count + 1
+
+            # 当前页大于5
+            else:
+                # 页码翻到最后
+                if (self.current_page + self.pager_count_half) > self.all_pager:
+                    pager_end = self.all_pager + 1
+                    pager_start = self.all_pager - self.pager_count + 1
+                else:
+                    pager_start = self.current_page - self.pager_count_half
+                    pager_end = self.current_page + self.pager_count_half + 1
+
+        page_html_list = []
+        # 添加前面的nav和ul标签
+        page_html_list.append('''
+                    <nav aria-label='Page navigation>'
+                    <ul class='pagination'>
+                ''')
+        first_page = '<li><a href="?page=%s">首页</a></li>' % (1)
+        page_html_list.append(first_page)
+
+        if self.current_page <= 1:
+            prev_page = '<li class="disabled"><a href="#">上一页</a></li>'
+        else:
+            prev_page = '<li><a href="?page=%s">上一页</a></li>' % (self.current_page - 1,)
+
+        page_html_list.append(prev_page)
+
+        for i in range(pager_start, pager_end):
+            if i == self.current_page:
+                temp = '<li class="active"><a href="?page=%s">%s</a></li>' % (i, i,)
+            else:
+                temp = '<li><a href="?page=%s">%s</a></li>' % (i, i,)
+            page_html_list.append(temp)
+
+        if self.current_page >= self.all_pager:
+            next_page = '<li class="disabled"><a href="#">下一页</a></li>'
+        else:
+            next_page = '<li><a href="?page=%s">下一页</a></li>' % (self.current_page + 1,)
+        page_html_list.append(next_page)
+
+        last_page = '<li><a href="?page=%s">尾页</a></li>' % (self.all_pager,)
+        page_html_list.append(last_page)
+        # 尾部添加标签
+        page_html_list.append('''
+                                           </nav>
+                                           </ul>
+                                       ''')
+        return ''.join(page_html_list)
+    
+    
+# views中使用
+def listbook(request):
+    if request.is_ajax():
+        if request.method == 'POST':
+            back_dic = {'code': 100, 'msg': ''}
+            book_id = request.POST.get('id')
+            models.Book.objects.filter(pk=book_id).delete()
+            back_dic['msg'] = '真的删除了!'
+
+            return JsonResponse(back_dic)
+    books = models.Book.objects.all()
+    all_count = books.count()
+    # 当前页
+    current_page = request.GET.get('page',1)
+
+    pagenaebar = Pagination(current_page,all_count,per_page_num=10, pager_count=9)
+    # all_count        所有的数据量
+    # per_page_num=10  每页显示多少条
+    # pager_count=9    一页显示多少页码
+    
+    # 查询本页开头到结尾的数据
+    page_data = books[pagenaebar.start:pagenaebar.end]
+    page_html = pagenaebar.page_html()
+    
+# 模板
+{{ page_html | safe }}
+```
+
+## django自带分页器
+
+```python
+from django.core.paginator import Paginator
+
+def article_list(request):
+    articles = Article.objects.all()  # 获取所有文章
+    paginator = Paginator(articles, 10)  # 每页显示10条
+    page_number = request.GET.get('page')  # 获取当前页码
+    page_obj = paginator.get_page(page_number)  # 获取分页对象
+    return render(request, 'article_list.html', {'page_obj': page_obj})
+
+# 在模板中渲染
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; 第一页</a>
+            <a href="?page={{ page_obj.previous_page_number }}">上一页</a>
+        {% endif %}
+        
+        <span class="current">
+            第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页。
+        </span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">下一页</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">最后一页 &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+# 这个变量是列表中展示的对象是后端返回的list
+{{ page_obj.object_list }}
+```
+
+
+
+## FORMS组件
+
+需求：
+
+1. 自己手动实现一个注册功能。
+2. 当用户的用户名包含金瓶梅，提示不符合社会主义核心价值观。
+3. 当用户的密码短于3位，提示密码太短了 不符合要求。
+
+django返回页面的流程。
+
+1.前端页面搭建——渲染页面。
+2.将数据传输到后端做校验——校验数据。
+3.展示错误信息——展示信息。
+
+forms组件能够直接帮你完成上面的三步操作。
+
+手动的方式把报错信息渲染到前端。
+
+```python
+def login(request):
+    error_msg = {'username':'', 'password':''}
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        if '金瓶梅' in username:
+            error_msg['username'] = '不能含有金瓶梅'
+        password = request.POST.get('password')
+        if len(password) < 3:
+            error_msg['password'] = '密码不能小于3位'
+
+    return render(request, 'login.html',{'error_msg': error_msg})
+
+# 前端渲染
+<form action="" method="post" enctype="application/x-www-form-urlencoded">
+    <h2 class="h2">注册</h2>
+    <p>username: <input type="text" name="username"></p>
+    <span  style="color: red">{{ error_msg.username }}</span>
+    <p>password: <input type="password" name="password"></p>
+    <span  style="color: red">{{ error_msg.password }}</span>
+    <input type="submit">
+</form>
+```
+
+
+
+### 1.forms组件基本用法
+
+校验用户提交的字段格式。
+
+```python
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=8, min_length=3)  # 用户名最长八位最短三位
+    password = forms.CharField(max_length=8, min_length=5)  # 密码最长八位最短五位
+    email = forms.EmailField()  # email必须是邮箱格式
+
+# 1.基本使用
+# 把需要校验的数据以字典的方式传递给自定义的类实例化产生对象
+form_obj = LoginForm({'username': 'admin', 'password':'1345','email':'xx@x.com'})
+
+# 查看传入的数据是否合法
+print(form_obj.is_valid())
+
+# 查看错误的数据
+print(form_obj.errors)
+
+# 查看通过检验的数据
+print(form_obj.cleaned_data)
+```
+
+注意事项:
+
+- 自定义类中所有的字段默认都是必须要传值的，不能少传。
+- 可以额外传入类中没有定义的字段名forms组件不会去校验也就意味着多传一点关系没有。
+
+### 2.forms渲染页面的三种方式
+
+后端实现
+
+```python
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=8, min_length=3)  # 用户名最长八位最短三位
+    password = forms.CharField(max_length=8, min_length=5)  # 密码最长八位最短五位
+    email = forms.EmailField()  # email必须是邮箱格式
+
+def lg(request):
+    form_obj = LoginForm()
+    if request.method == 'POST':
+        form_obj = LoginForm(request.POST)
+        # 如果数据都是合法的那么在写入数据库或者验证之后就可以返回正常的页面了
+        if form_obj.is_valid():
+            return HttpResponse('ok')
+    # 但是上面的不合法就会被渲染错误信息之后返回
+    return render(request, 'lg.html', {'form_obj': form_obj})
+```
+
+
+
+```html
+<p>第一种渲染页面的方式(封装程度太高一般只用于本地测试通常不适用)</p>
+{{ form_obj.as_p }}  
+{{ form_obj.as_ul }}
+{{ form_obj.as_table }}
+
+<p>第二种渲染页面的方式(可扩展性较高 书写麻烦)</p>
+<p>{{ form_obj.username.label }}{{ form_obj.username }}</p>
+<p>{{ form_obj.password.label }}{{ form_obj.password }}</p>
+<p>{{ form_obj.email.label }}{{ form_obj.email }}</p>
+
+<p>第三种渲染页面的方式(推荐)</p>
+{% for foo in form_obj %}
+	<p>{{ foo.label }}{{ foo }}</p>
+{% endfor %}
+```
+
+注意事项
+1.forms组件在帮你渲染页面的时候只会渲染获取用户输入的标签提交按钮需要你手动添加.
+2.input框的label注释不指定的情况下默认用的类中字段的首字母大写.
+
+校验数据的时候可以前后端都校验做一个双重的校验,但是前端的校验可有可无,而后端的校验则必须要有,因为前端的校验可以通过爬虫直接避开。
+
+前端取消浏览器校验功能，form标签指定novalidate属性即可。
+```html
+<form action="" method='post' novalidate></form>
+```
+
+#### 展示错误信息
+
+```python
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=8, min_length=3,label='用户名')  # 用户名最长八位最短三位
+    password = forms.CharField(max_length=8, min_length=5, label='密码')  # 密码最长八位最短五位
+    email = forms.EmailField()  # email必须是邮箱格式
+
+def lg(request):
+    form_obj = LoginForm()
+    if request.method == 'POST':
+        # 如果数据都是合法的那么在写入数据库或者验证之后就可以返回正常的页面了
+        form_obj = LoginForm(request.POST)
+        if form_obj.is_valid():
+            return HttpResponse('ok')
+    # 但是上面的不合法就会被渲染错误信息之后返回
+    return render(request, 'lg.html', {'form_obj': form_obj})
+
+# 前端渲染
+<form action="" method="post" enctype="application/x-www-form-urlencoded" novalidate>
+    {% for foo in form_obj %}
+        <p>{{ foo.label }}:{{ foo }}
+        <p style="color: red">{{ foo.errors.0 }}</p>
+        </p>
+    {% endfor %}
+    <input type="submit">
+</form>
 ```
 
 

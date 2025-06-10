@@ -4,6 +4,8 @@ from django.core import serializers
 from app01 import models
 from app01.utils.mypage import Pagination
 
+from django.core.paginator import Paginator
+
 # Create your views here.
 def index(request):
     if request.is_ajax():
@@ -41,16 +43,19 @@ def listbook(request):
             back_dic['msg'] = '真的删除了!'
 
             return JsonResponse(back_dic)
-    books = models.Book.objects.all()
+    articles = models.Book.objects.all()
     # res = serializers.serialize('json', books)
-    all_count = books.count()
-    current_page = request.GET.get('page',1)
+    # all_count = books.count()
+    # current_page = request.GET.get('page',1)
+    #
+    # pagenaebar = Pagination(current_page,all_count,per_page_num=10, pager_count=9)
+    # page_data = books[pagenaebar.start:pagenaebar.end]
+    # page_html = pagenaebar.page_html()
 
-    pagenaebar = Pagination(current_page,all_count,per_page_num=10, pager_count=9)
-    page_data = books[pagenaebar.start:pagenaebar.end]
-    page_html = pagenaebar.page_html()
-
-
+    paginator = Paginator(articles, 10)  # 每页显示10条
+    page_number = request.GET.get('page')  # 获取当前页码
+    page_obj = paginator.get_page(page_number)  # 获取分页对象
+    return render(request, 'listbook.html', {'page_obj': page_obj})
 
     return render(request, 'listbook.html', locals())
 
