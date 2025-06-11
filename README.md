@@ -2705,7 +2705,7 @@ def lg(request):
 <form action="" method='post' novalidate></form>
 ```
 
-#### 展示错误信息
+### 3.展示错误信息
 
 ```python
 class LoginForm(forms.Form):
