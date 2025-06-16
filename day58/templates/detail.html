@@ -8,14 +8,10 @@
   <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </head>
 <body>
-<form action="" method="post" enctype="application/x-www-form-urlencoded">
-    <h2 class="h2">登陆</h2>
-    <p>username: <input type="text" name="username"></p>
-    <span  style="color: red">{{ error_msg.username }}</span>
-    <p>password: <input type="password" name="password"></p>
-    <span  style="color: red">{{ error_msg.password }}</span>
-    <input type="submit">
-</form>
-
+<ul class="">
+        <li>{{ username }}</li>
+        <li>{{ age }}</li>
+        <li>{{ login_time }}</li>
+</ul>
 </body>
 </html>

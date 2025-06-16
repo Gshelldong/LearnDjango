@@ -8,14 +8,13 @@
   <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </head>
 <body>
-<form action="" method="post" enctype="application/x-www-form-urlencoded">
-    <h2 class="h2">登陆</h2>
-    <p>username: <input type="text" name="username"></p>
-    <span  style="color: red">{{ error_msg.username }}</span>
-    <p>password: <input type="password" name="password"></p>
-    <span  style="color: red">{{ error_msg.password }}</span>
-    <input type="submit">
-</form>
-
+<h2>这是首页</h2>
+<h3>欢迎用户{{ username }}登陆!!!</h3>
+<button>
+    <a href="/detail/">用户详情</a>
+</button>
+<button>
+    <a href="/loginout/">注销</a>
+</button>
 </body>
 </html>

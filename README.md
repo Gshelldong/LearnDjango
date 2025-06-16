@@ -2832,7 +2832,7 @@ widget=widgets.PasswordInput(attrs={'class':'form-control c1 c2','username':'jas
 validators        自定义校验规则
 ```
 
-#### form表单中的其它选项
+### form表单中的其它选项
 
 ```python
      # 单选的radio框
@@ -2852,6 +2852,172 @@ validators        自定义校验规则
 ```
 
 
+
+## 操作Cookie
+
+cookie只保存在客户端，服务端生成并配置，用来记录客户端的状态，发送给浏览器缓存。明文传输最大只能保存4k的数据。默认有效期是14天。
+
+```python
+def login(request):
+    error_msg = {'username':'', 'password':''}
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        if username == 'alex' and password == '123':
+            # 先获取url中跳转的参数
+            next_url = request.GET.get('next')
+            # 如果有就直接跳转到要访问的页面
+            if next_url:
+                return redirect(next_url)
+        else:
+            # 如果没有跳转的参数则直接跳转到首页
+            obj = redirect('/home/')
+        # cookie的过期时间，单位是秒，3600代表一个小时
+        obj.set_cookie('username', username, max_age=3600)
+        return obj
+    # get请求直接返回登陆页
+    return render(request, 'login.html',{'error_msg': error_msg})
+
+
+from functools import wraps
+
+def login_auth(func):
+    @wraps(func)
+    def inner(request,*args,**kwargs):
+        # 从request中获取cookie
+        # print(request.path)
+        # print(request.get_full_path())
+        target_url = request.get_full_path()
+        if request.COOKIES.get('username'):
+            res = func(request,*args,**kwargs)
+            return res
+        else:
+            return redirect('/login/?next=%s'%target_url)
+    return inner
+
+@login_auth
+def home(request):
+    username = request.COOKIES.get('username')
+    return render(request, 'home.html',{'username': username})
+
+def loginout(request):
+    obj = redirect('/login/')
+    obj.delete_cookie('username')
+    return obj
+```
+
+
+
+## 操作session
+
+session服务器会保存一份在django_session表中。
+
+```python
+def set_session(request):
+    request.session['username'] = 'alex'
+    request.session['age'] = 18
+    request.session['ts'] = int(time.time())
+    # 设置seession的超时时间是3600s
+    # set_expiry(value)有几种情况
+    # 1 如果value是一个整数，session将在这些秒数后到期。
+    # 2 如果value是一个datatime或timedelta，session将在这个时间后到期。
+    # 3 如果value是0,用户会话的Cookie将在用户的浏览器关闭时过期。
+    # 4 如果value是None, session会使用全局session失效策略。
+    # 5 设置小于0的整数，session将在会话的Cookie到期时过期。
+    request.session.set_expiry(3600)
+    return HttpResponse('设置session')
+
+def get_session(request):
+    username = request.session.get('username')
+    age = request.session.get('age')
+    ts = request.session.get('ts')
+
+    print(username,age,ts)
+    return HttpResponse(f"user's session: {username}")
+
+# 删除session
+def del_session(request):
+    # 1 删除指定的session
+    # 删除的是浏览器的sessionid信息，如果delete()不带参数，默认删除的是浏览器的sessionid信息
+    # request.session.delete('username')
+    # 2 删除所有的session，flush()删除的是所有的sessionid信息
+    request.session.flush()
+    return HttpResponse('删除session')
+```
+
+### 使用session认证登录
+
+```python
+def login(request):
+    error_msg = {'username':'', 'password':''}
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        if username == 'alex' and password == '123':
+            # 先获取url中跳转的参数
+            next_url = request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+        else:
+            # 如果没有跳转的参数则直接跳转到首页
+            obj = redirect('/home/')
+        # cookie的过期时间 单位是秒  3600代表一个小时
+        # obj.set_cookie('username', username, max_age=3600)
+
+        # 设置session
+        request.session['username'] = username
+        request.session['ts'] = int(time.time())
+        request.session.set_expiry(3600)
+
+        return obj
+
+    return render(request, 'login.html',{'error_msg': error_msg})
+
+
+from functools import wraps
+
+def login_auth(func):
+    @wraps(func)
+    def inner(request,*args,**kwargs):
+        # 从request中获取cookie
+        # print(request.path)
+        # print(request.get_full_path())
+        target_url = request.get_full_path()
+        if request.session.get('username'):
+            res = func(request,*args,**kwargs)
+            return res
+        else:
+            return redirect('/login/?next=%s'%target_url)
+    return inner
+
+@login_auth
+def home(request):
+    username = request.session.get('username')
+    return render(request, 'home.html',{'username': username})
+
+def loginout(request):
+    obj = redirect('/login/')
+    request.session.flush()
+    return obj
+
+# 前端实现
+## login.html
+<form action="" method="post" enctype="application/x-www-form-urlencoded">
+    <h2 class="h2">登陆</h2>
+    <p>username: <input type="text" name="username"></p>
+    <span  style="color: red">{{ error_msg.username }}</span>
+    <p>password: <input type="password" name="password"></p>
+    <span  style="color: red">{{ error_msg.password }}</span>
+    <input type="submit">
+</form>
+
+## home.html
+<h2>这是首页</h2>
+<h3>欢迎用户{{ username }}登陆!!!</h3>
+<button>
+    <a href="/loginout/">注销</a>
+</button>
+```
 
 
 
