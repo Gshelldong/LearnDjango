@@ -3021,9 +3021,380 @@ def loginout(request):
 
 
 
+## 中间件必会方法
+
+django中间件
+django中间件是类似于是django的保安,请求的时候需要先经过中间件才能到达django后端(urls,views,templates,models),响应走的时候也需要经过中间件才能到达web服务网关接口.
+
+1.网站全局的身份校验,访问频率限制,权限校验...只要是涉及到全局的校验你都可以在中间件中完成 
+
+2.django的中间件是所有web框架中 做的最好的
+
+### 需要掌握的方法
+
+### 1.process_request()方法
+
+1. 请求来的时候 会经过每个中间件里面的process_request方法(从上往下)
+2. 如果方法里面直接返回了HttpResponse对象那么会直接返回不再往下执行
+   - 基于该特点就可以做访问频率限制,身份校验,权限校验。
+     				
+### 2.process_response()方法
+
+1. 必须将response形参返回 因为这个形参指代的就是要返回给前端的数据
+2. 响应走的时候 会依次经过每一个中间件里面的process_response方法(从下往上)
+
+### 了解方法
+
+### 1.process_view()
+
+1. 在路由匹配成功执行视图函数之前触发。
+
+
+### 2.process_exception()
+1. 当你的视图函数报错时就会自动执行。
+### 3.process_template_response()
+1. 当你返回的HttpResponse对象中必须包含render属性才会触发。
+
+```python
+def index(request):
+    print('我是index视图函数')
+    def render():
+        return HttpResponse('什么鬼玩意')
+    obj = HttpResponse('index')
+    obj.render = render
+    return obj
+
+```
+
+
+中间件必须继承的类
+
+```python
+from django.utils.deprecation import MiddlewareMixin
+```
+
+定义中间件方法
+
+```python
+# mymiddleware/myadd.py
+from django.utils.deprecation import MiddlewareMixin
+from django.shortcuts import HttpResponse
+
+class MyAdd(MiddlewareMixin):
+    def process_request(self,request):
+        print('我是第一个中间件里面的process_request方法')
+
+    def process_response(self,request,response):
+        print('我是第一个中间件的process_reponse方法')
+        return response
+
+    def process_view(self,request,view_func,view_args,view_kwargs):
+        print(view_func)
+        print(view_args)
+        print(view_kwargs)
+        print('我是第一个中间件里面的process_view方法')
+
+    def process_exception(self, request, exception):
+        print('我是第一个中间件里面的process_exception')
+
+    def process_template_response(self, request, response):
+        print('我是第一个中间件里面的process_template_response')
+        return response
+
+
+class MyAdd1(MiddlewareMixin):
+    def process_request(self, request):
+        print('我是第2个中间件里面的process_request方法')
+
+    def process_response(self, request, response):
+        print('我是第2个中间件的process_reponse方法')
+        return response
+
+    def process_view(self,request,view_func,view_args,view_kwargs):
+        print(view_func)
+        print(view_args)
+        print(view_kwargs)
+        print('我是第二个中间件里面的process_view方法')
+
+    def process_exception(self, request, exception):
+        print('我是第二个中间件里面的process_exception')
+
+    def process_template_response(self, request, response):
+        print('我是第二个中间件里面的process_template_response')
+        return response
+
+
+class MyAdd2(MiddlewareMixin):
+    def process_request(self, request):
+        print('我是第3个中间件里面的process_request方法')
+
+    def process_response(self, request, response):
+        print('我是第3个中间件的process_reponse方法')
+        return response
+
+    def process_view(self,request,view_func,view_args,view_kwargs):
+        print(view_func)
+        print(view_args)
+        print(view_kwargs)
+        print('我是第三个中间件里面的process_view方法')
+
+    def process_exception(self, request, exception):
+        print('我是第三个中间件里面的process_exception')
+
+    def process_template_response(self, request, response):
+        print('我是第三个中间件里面的process_template_response')
+        return response
+
+```
+
+settings.py中引入，直接写路径
+
+```python
+MIDDLEWARE = [
+......
+    'mymiddleware.myadd.MyAdd',
+    'mymiddleware.myadd.MyAdd1',
+    'mymiddleware.myadd.MyAdd2',
+]
+```
+
+## CSRF跨站伪造请求
+
+原理：钓鱼网站通常模拟一个一模一样的页面来来误导用户，实际上提交的信息是被篡改过的信息；通过csrf token的方式给页面做标记，当钓鱼网站中向后端发送的csrf token标识不合法的时候后端服务器就可以直接拒接提交的非法的请求。
+
+csrf token有以下特点
+
+1. 同一个浏览器每一次访问都不一样
+2. 不同浏览器绝对不会重复
+
+settings.py中csrf的配置
+
+```python
+MIDDLEWARE = [
+......
+    'django.middleware.csrf.CsrfViewMiddleware',
+......
+]
+```
 
 
 
+### 1.FORM发送请求携带csrf
+
+```python
+# 直接携带
+{% csrf_token %}
+
+# login.html
+<form action="" method="POST">
+    {% csrf_token %}
+    <p>username: <input type="text" name="username"></p>
+    <p>password: <input type="password" name="password"></p>
+    <input type="submit">
+</form>
+```
+
+
+
+### 2.ajax携带csrf
+
+#### 2.1 在ajax中通过标签获csrf token
+
+```html
+<form action="" method="POST">
+    {% csrf_token %}
+    <p>username: <input type="text" name="username"></p>
+    <p>password: <input type="password" name="password"></p>
+    <input type="submit">
+    <button id="b1">发送ajax请求</button>
+</form>
+<script>
+        $('#b1').click(function () {
+            $.ajax({
+                url: '',
+                type: 'post',
+                // 第一种方式
+                data: {'username': 'jason', 'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()},
+                // 第二种方式
+                // data: {'username': 'jason', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                // 第三种方式 :直接引入js文件
+                // data: {'username': 'jason'},
+                success: function (data) {
+                    alert(data)
+                }
+            })
+        })
+
+</script>
+```
+
+
+
+#### 2.2 直接ajax的模板中声名
+
+```html
+<form action="" method="POST">
+    {% csrf_token %}
+    <p>username: <input type="text" name="username"></p>
+    <p>password: <input type="password" name="password"></p>
+    <input type="submit">
+    <button id="b1">发送ajax请求</button>
+</form>
+<script>
+        $('#b1').click(function () {
+            $.ajax({
+                url: '',
+                type: 'post',
+                // 第一种方式
+                // data: {'username': 'jason', 'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()},
+                // 第二种方式
+                data: {'username': $('[name=username]').val(), 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                // 第三种方式 :直接引入js文件
+                // data: {'username': 'jason'},
+                success: function (data) {
+                    alert(data)
+                }
+            })
+        })
+</script>
+```
+
+#### 2.3 把获取csrf toekn封装到js中
+
+```js
+// static/csrf.js
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+var csrftoken = getCookie('csrftoken');
+
+
+function csrfSafeMethod(method) {
+  // these HTTP methods do not require CSRF protection
+  return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+$.ajaxSetup({
+  beforeSend: function (xhr, settings) {
+    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+      xhr.setRequestHeader("X-CSRFToken", csrftoken);
+    }
+  }
+});
+```
+
+在form表单中直接引入
+
+```html
+<form action="" method="POST">
+    {% csrf_token %}
+    <p>username: <input type="text" name="username"></p>
+    <p>password: <input type="password" name="password"></p>
+    <input type="submit">
+    <button id="b1">发送ajax请求</button>
+</form>
+{% load static %}
+<script src="{% static 'csrf.js' %}"></script> <!--引入对csrf的处理js-->
+<script>
+        $('#b1').click(function () {
+            $.ajax({
+                url: '',
+                type: 'post',
+                // 第一种方式
+                // data: {'username': 'jason', 'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()},
+                // 第二种方式
+                // data: {'username': $('[name=username]').val(), 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                // 第三种方式 :直接引入js文件
+
+                data: {'username': $('[name=username]').val()},
+                success: function (data) {
+                    alert(data)
+                }
+            })
+        })
+</script>
+```
+
+### 3.局部使用csrf校验
+
+单个保护或者是不保护是根据是否在settings.py中启用csrf相对的。如果启用就是`@不保护`，反之就是`@保护`
+
+#### 3.1 在fbv中使用
+
+```python
+from django.views.decorators.csrf import csrf_exempt,csrf_protect
+# 不保护
+@csrf_exempt
+def login(request):
+    return HttpResponse('login')
+
+# 保护
+@csrf_protect
+def lll(request):
+    return HttpResponse('lll')
+```
+
+
+
+#### 3.2 在cbv中使用
+
+```python
+from django.views import View
+from django.utils.decorators import method_decorator
+
+# 第一中种方式
+# @method_decorator(csrf_protect,name='post')  # 有效的
+# @method_decorator(csrf_exempt,name='post')  # 无效的
+@method_decorator(csrf_exempt,name='dispatch')  # 第二种可以不校验的方式
+class MyView(View):
+    # @method_decorator(csrf_exempt)  # 第一种可以不校验的方式
+    @method_decorator(csrf_protect)
+    def dispatch(self, request, *args, **kwargs):
+        res = super().dispatch(request, *args, **kwargs)
+        return res
+
+    def get(self,request):
+        return HttpResponse('get')
+    # 第二种方式
+    # @method_decorator(csrf_exempt)  # 无效的
+    # @method_decorator(csrf_protect)  # 有效的
+    def post(self,request):
+        return HttpResponse('post')
+```
+
+
+
+## Auth方法
+
+### 1.使用auth认证
+
+### 2.判断用户是否登录
+
+### 3.检验当前用户是否登录
+
+### 4.修改用户密码
+
+### auth用户自定义表
+
+### 5.创建用户
+
+- 普通用用户
+
+- 管理员用户
+
+## django思想功能插拔式配置
 
 
 

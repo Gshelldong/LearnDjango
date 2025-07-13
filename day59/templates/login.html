@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+      <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+<form action="" method="POST">
+    {% csrf_token %}
+    <p>username: <input type="text" name="username"></p>
+    <p>password: <input type="password" name="password"></p>
+    <input type="submit">
+    <button id="b1">发送ajax请求</button>
+</form>
+{% load static %}
+<script src="{% static 'csrf.js' %}"></script>
+<script>
+        $('#b1').click(function () {
+            $.ajax({
+                url: '',
+                type: 'post',
+                // 第一种方式
+                // data: {'username': 'jason', 'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()},
+                // 第二种方式
+                // data: {'username': $('[name=username]').val(), 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                // 第三种方式 :直接引入js文件
+
+                data: {'username': $('[name=username]').val()},
+                success: function (data) {
+                    alert(data)
+                }
+            })
+        })
+</script>
+</body>
+</html>
