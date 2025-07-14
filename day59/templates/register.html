@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+<form action="" method="POST">
+    {% csrf_token %}
+    <label>
+      <p>是否为管理员: <input type="checkbox" name="is_superuser" value="true"></p>
+    </label>
+    <p>username: <input type="text" name="username"></p>
+    <p>password: <input type="password" name="password"></p>
+    <p>email: <input type="text" name="email"></p>
+    <input type="submit">
+</form>
+</body>
+</html>

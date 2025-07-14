@@ -3374,27 +3374,217 @@ class MyView(View):
         return HttpResponse('post')
 ```
 
-
-
 ## Auth方法
+
+如果你想用auth模块那么就要使用全套。
+跟用户相关的功能模块:
+- 用户的注册
+- 登陆
+- 验证
+- 修改密码 ...
+
+执行数据库迁移命令之后会生成很多表其中的auth_user是一张用户相关的表格.
+
+添加数据
+```python
+python manage.py createsuperuser admin
+```
+创建超级用户这个超级用户就可以拥有登陆django admin后台管理的权限.
 
 ### 1.使用auth认证
 
+urls.py
+
+```python
+path('auth_login/',views.auth_login, name='auth_login')
+```
+
+auth_login.html
+
+```html
+<form action="" method="POST">
+    {% csrf_token %}
+    <p>username: <input type="text" name="username"></p>
+    <p>password: <input type="password" name="password"></p>
+    <input type="submit">
+</form>
+```
+
+views.py
+
+```python
+def auth_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        # 必须要用因为数据库中的密码字段是密文的而你获取的用户输入的是明文
+        user = auth.authenticate(username=username,password=password)
+        # 没有查询到用户返回的是none
+        print(user)
+        if user:
+            # 将用户状态记录到session中
+            """只要执行了这一句话  你就可以在后端任意位置通过request.user获取到当前用户对象"""
+            auth.login(request,user)
+            return HttpResponse('登陆成功!')
+        else:
+            return HttpResponse('登陆失败!')
+    return render(request,'auth_login.html')
+```
+
 ### 2.判断用户是否登录
 
-### 3.检验当前用户是否登录
+```python
+# urls.py
+path('is_login/',views.is_login, name='is_login')
+
+# 判断用户是否登陆的方法实现
+def is_login(request):
+    # 获取当前用户对象
+    user = request.user
+    # 判断用户是否登陆,如果没有登陆user的值就是AnonymousUser
+    authtked = request.user.is_authenticated
+    print(user, authtked)
+
+    # 判断用户是否登陆
+    if authtked:
+        return HttpResponse(f'{user}用户已经登陆!')
+    else:
+        return HttpResponse(f'用户未登陆! {user}')
+```
+
+### 3.校验登陆访问
+
+```python
+# 登陆访问成功后,跳转到指定的页面
+from django.contrib.auth.decorators import login_required
+
+# @login_required(login_url='/login_required/')  # 局部配置
+@login_required(login_url='/auth_login/')
+def user_detail(request):
+    user = request.user
+    return HttpResponse(f'这是用户{user}的详情页!')
+
+# 处理GET next参数,在认证方法中实现
+...
+            if request.GET.get('next'):
+                print(request.GET.get('next'))
+                return redirect(request.GET.get('next'))
+...
+
+# 在全局范围内定义登陆跳转页面
+## settings.py
+LOGIN_URL = '/xxx/'
+```
 
 ### 4.修改用户密码
 
-### auth用户自定义表
+```python
+# alter_password.html
+<form action="" method="POST">
+    {% csrf_token %}
+    <p>username: <input type="text" name="username" value="{{ username }}" disabled></p>
+    <p>old password: <input type="password" name="old_pas"></p>
+    <p>new password: <input type="password" name="new_pas"></p>
+    <input type="submit">
+</form>
 
-### 5.创建用户
+
+# 修改密码需要用户登陆
+@login_required(login_url='/auth_login/')
+def alter_password(request):
+    user = request.user
+    if request.method == 'POST':
+        old_pas = request.POST.get('old_pas')
+        new_pas = request.POST.get('new_pas')
+        # 校验旧密码是否正确
+        if user.check_password(old_pas):
+            # 修改密码
+            user.set_password(new_pas)
+            user.save()
+            # 修改密码成功之后注销当前用户状态
+            auth.logout(request)
+            return HttpResponse('密码修改成功!')
+        else:
+            return HttpResponse('密码修改失败!')
+    return render(request, 'alter_password.html',{'username': user})
+```
+
+
+
+
+
+### 5.注册用户
 
 - 普通用用户
 
 - 管理员用户
 
+```python
+# templates/register.html
+<form action="" method="POST">
+    {% csrf_token %}
+    <label>
+      <p>是否为管理员: <input type="checkbox" name="is_superuser" value="true"></p>
+    </label>
+    <p>username: <input type="text" name="username"></p>
+    <p>password: <input type="password" name="password"></p>
+    <p>email: <input type="text" name="email"></p>
+    <input type="submit">
+</form>
+
+# urls.py
+path('register/',views.register, name='register'),
+
+# views.py
+from django.contrib.auth.models import User
+def register(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        email = request.POST.get('email')
+
+        is_superuser = request.POST.get('is_superuser')
+        print(is_superuser)
+        if is_superuser:
+            # 创建管理员用户,email为必填字段
+            User.objects.create_superuser(username=username,password=password,email=email)
+        else:
+            # 创建普通用户
+            User.objects.create_user(username=username,password=password,email=email)
+        return HttpResponse(f'{username} 注册成功!')
+
+    return render(request,'register.html')
+```
+
+## auth用户自定义表
+
+```python
+from django.contrib.auth.models import AbstractUser
+
+class UserInfo(AbstractUser):
+    """
+    自定义用户表
+    """
+    phone = models.BigIntegerField(null=True, blank=True)
+    avatar = models.FileField(upload_to='avatars/', default='avatars/default.png')
+    
+# 一定要告诉django使用的是自定义的表 settings.py
+# app.类名称
+AUTH_USER_MODEL = 'app01.UserInfo'
+
+# 迁移表
+python manage.py makemigrations
+python manage.py migrate
+```
+
+
+
 ## django思想功能插拔式配置
+
+核心思想，把每个功能都写在一个包中，通过鸭子模型，定义每个功能中都有相似的方法，通过settings.py列出每个包中的功能，在包的`__init__.py`中通过for循环导入settings.py中的配置项来处理每个功能，这样如果在settings.py中功能被注释了那么就不会被处理。这样实现了功能的热配置。
+
+```python
+```
 
 
 
