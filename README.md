@@ -3581,9 +3581,12 @@ python manage.py migrate
 
 ## django思想功能插拔式配置
 
-核心思想，把每个功能都写在一个包中，通过鸭子模型，定义每个功能中都有相似的方法，通过settings.py列出每个包中的功能，在包的`__init__.py`中通过for循环导入settings.py中的配置项来处理每个功能，这样如果在settings.py中功能被注释了那么就不会被处理。这样实现了功能的热配置。
+核心思想，把每个功能都写在一个包中，通过鸭子模型和反射，定义每个功能中都有相似的方法，通过settings.py列出每个包中的功能，在包的`__init__.py`中通过for循环导入settings.py中的配置项来处理每个功能，这样如果在settings.py中功能被注释了那么就不会被处理。这样实现了功能的热配置。
+
+见day59/hotsetframework部分代码。
 
 ```python
+# hotsetframework/
 ```
 
 
