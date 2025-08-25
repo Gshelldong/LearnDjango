@@ -1807,7 +1807,7 @@ res = models.Book.objects.filter(price__lt = 50)
 res = models.Book.objects.filter(price__lte = 42)
 res1 = models.Book.objects.filter(price__gte = 42)
 
-# 查询加个是88或者35或者42的书籍
+# 查询价格是88或者35或者42的书籍
 res = models.Book.objects.filter(price__in=[88,35,42])
 
 # 查询价格在50到100之间的书籍,开头结尾都包含
