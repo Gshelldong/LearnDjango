@@ -690,11 +690,54 @@ edit_obj.save()
 
 ![image-20250421153839544](images\image-20250421153839544.png)
 
-多对多：书和出版社联合出版，一个出版社出版多本书。
+#### 1.多对多
 
-一对多：一个作者出版多本书。
+书和出版社联合出版，一个出版社出版多本书。
 
-一对一：用户和用户详情，用户的唯一id对应用的详情表。
+#### 2.一对多
+
+一个作者出版多本书。
+
+```bash
+from django.db import models
+
+class Author(models.Model):
+    """作者模型（一的一方）"""
+    name = models.CharField(max_length=100, verbose_name="作者姓名")
+    age = models.IntegerField(verbose_name="年龄", null=True, blank=True)
+    introduction = models.TextField(verbose_name="作者简介", blank=True)
+    created_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+
+    def __str__(self):
+        return self.name  # 显示作者姓名
+
+class Book(models.Model):
+    """图书模型（多的一方）"""
+    title = models.CharField(max_length=200, verbose_name="书名")
+    # 外键关联作者，建立一对多关系
+    author = models.ForeignKey(
+        Author,  # 关联的模型
+        on_delete=models.CASCADE,  # 作者被删除时，关联的图书也删除
+        related_name="books",  # 反向查询名称：author.books 可获取该作者的所有图书
+        verbose_name="所属作者"
+    )
+    publish_date = models.DateField(verbose_name="出版日期", null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="价格", null=True, blank=True)
+    created_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+
+    def __str__(self):
+        return f"{self.title}（{self.author.name}）"
+```
+
+
+
+
+
+#### 3.一对一
+
+用户和用户详情，用户的唯一id对应用的详情表。
+
+
 
 ### 表与表之间建立联系
 
@@ -712,7 +755,9 @@ django orm中表与表之间建关系。
 使用方式：
 
 ```python
-
+class BooktoAuthor(models.Model):
+    book = models.ForeignKey(to='Book',on_delete=models.CASCADE)
+    ......
 ```
 
 注意:
@@ -3558,6 +3603,8 @@ def register(request):
 
 ## auth用户自定义表
 
+在创建新的表之后会继承原有的字段，并添加自己新增的字段，然后生成新表。
+
 ```python
 from django.contrib.auth.models import AbstractUser
 
@@ -3577,7 +3624,16 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
-
+> blank 参数的作用
+>
+> - blank 是布尔类型参数，默认值为 False。它控制在表单验证时，该字段是否可以为空。
+> - 当 blank=True 时，在表单中该字段可以不填写，表单验证会通过。
+> - 当 blank=False 时，在表单中该字段是必填项，若不填写，表单验证会失败。
+>
+> blank 与 null 的区别
+>
+> - null 是数据库层面的参数，控制数据库表中该字段是否可以存储 NULL 值。
+> - blank 是表单验证层面的参数，控制在表单提交时该字段是否可以为空。
 
 ## django思想功能插拔式配置
 
