@@ -3431,6 +3431,9 @@ class MyView(View):
 执行数据库迁移命令之后会生成很多表其中的auth_user是一张用户相关的表格.
 
 添加数据
+
+### 创建超级管理用户
+
 ```python
 python manage.py createsuperuser admin
 ```
@@ -3601,6 +3604,30 @@ def register(request):
     return render(request,'register.html')
 ```
 
+### 6.django的密码校验方法
+
+```python
+import os
+BASE_PATH=os.path.dirname(os.path.dirname(__file__))
+APP_DIR_NAME=BASE_PATH.split(os.sep)[-1]
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'{APP_DIR_NAME}.settings')
+
+import django
+django.setup()
+
+from django.contrib.auth.hashers import check_password, make_password
+
+
+en_password = make_password('abc.comM', salt='Pass.1122')
+
+
+res = check_password('abc.comM', en_password)
+print(res)  #===>True
+```
+
+
+
 ## auth用户自定义表
 
 在创建新的表之后会继承原有的字段，并添加自己新增的字段，然后生成新表。
@@ -3634,6 +3661,8 @@ python manage.py migrate
 >
 > - null 是数据库层面的参数，控制数据库表中该字段是否可以存储 NULL 值。
 > - blank 是表单验证层面的参数，控制在表单提交时该字段是否可以为空。
+
+
 
 ## django思想功能插拔式配置
 
